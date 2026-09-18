@@ -87,3 +87,15 @@ WHEN an unlocked Duel Party leader leaves the party or disconnects THE SYSTEM SH
 ### REQ-021 - Vanilla explosive self-damage
 
 WHEN a participant damages themselves with an explosive THE SYSTEM SHALL allow self-damage while continuing to prevent explosive damage to other members of their team.
+
+### REQ-022 - Atomic analytics records
+
+WHEN a duel result is persisted THE SYSTEM SHALL store its parent and participant records atomically, roll back failed inserts, and preserve any caller-owned transaction and connection mode.
+
+### REQ-023 - Expired roster reuse
+
+WHEN a leader creates a challenge after an earlier challenge expires THE SYSTEM SHALL release expired roster locks before checking availability without requiring an intermediate lookup.
+
+### REQ-024 - Match type consistency
+
+IF a match contains multiple participants per team and its type is not PARTY THEN THE SYSTEM SHALL reject it while preserving valid singleton matches.

@@ -70,6 +70,44 @@ public final class DuelAnalyticsStore {
         if (connection == null || record == null) {
             return;
         }
+        try {
+            insertAtomically(record);
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Failed to persist duel record: " + ex.getMessage());
+        }
+    }
+
+    private void insertAtomically(DuelRecord record) throws SQLException {
+        boolean autoCommit = connection.getAutoCommit();
+        java.sql.Savepoint savepoint = null;
+        if (autoCommit) {
+            connection.setAutoCommit(false);
+        } else {
+            savepoint = connection.setSavepoint();
+        }
+        try {
+            insertRecord(record);
+            if (autoCommit) {
+                connection.commit();
+            } else {
+                connection.releaseSavepoint(savepoint);
+            }
+        } catch (SQLException ex) {
+            if (autoCommit) {
+                connection.rollback();
+            } else {
+                connection.rollback(savepoint);
+                connection.releaseSavepoint(savepoint);
+            }
+            throw ex;
+        } finally {
+            if (autoCommit) {
+                connection.setAutoCommit(true);
+            }
+        }
+    }
+
+    private void insertRecord(DuelRecord record) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement("""
             INSERT INTO duel_records (
                 reference, started_at, ended_at, duration_ms,
@@ -104,8 +142,6 @@ public final class DuelAnalyticsStore {
             statement.setInt(22, record.teamSize());
             statement.executeUpdate();
             insertParticipants(record);
-        } catch (SQLException ex) {
-            plugin.getLogger().warning("Failed to persist duel record: " + ex.getMessage());
         }
     }
 

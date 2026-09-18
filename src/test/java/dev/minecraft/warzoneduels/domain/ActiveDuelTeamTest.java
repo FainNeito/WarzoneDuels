@@ -11,6 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ActiveDuelTeamTest {
     @Test
+    void normalRejectsMultiMemberTeamsButBothTypesAllowSingletons() {
+        MatchTeam first = new MatchTeam(UUID.randomUUID(), List.of(participant("A"), participant("B")));
+        MatchTeam second = new MatchTeam(UUID.randomUUID(), List.of(participant("C"), participant("D")));
+        assertThrows(IllegalArgumentException.class,
+            () -> new ActiveDuel(DuelMatchType.NORMAL, first, second, new DuelSettings(), 1L));
+        for (DuelMatchType type : DuelMatchType.values()) {
+            ActiveDuel duel = new ActiveDuel(type, MatchTeam.singleton(participant("A")),
+                MatchTeam.singleton(participant("B")), new DuelSettings(), 1L);
+            assertEquals(type, duel.matchType());
+        }
+    }
+
+    @Test
     void legacyConstructorCreatesNormalSingletonTeams() {
         MatchParticipant first = participant("First");
         MatchParticipant second = participant("Second");

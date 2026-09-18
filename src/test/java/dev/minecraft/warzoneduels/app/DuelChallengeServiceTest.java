@@ -17,6 +17,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DuelChallengeServiceTest {
     @Test
+    void expiredChallengeCanBeReplacedWithoutAnIntermediateLookup() {
+        Fixture fixture = fixture(2, 2);
+        DuelChallenge old = fixture.challenges.createPartyChallenge(
+            fixture.first.leaderId(), fixture.second.leaderId(), new DuelSettings(), 1_000L);
+        DuelChallenge replacement = fixture.challenges.createPartyChallenge(
+            fixture.first.leaderId(), fixture.second.leaderId(), new DuelSettings(), 31_000L);
+        assertFalse(old.id().equals(replacement.id()));
+        assertEquals(1, fixture.challenges.activeChallengeCount());
+        assertEquals(replacement.id(), fixture.first.rosterLockId());
+        assertEquals(replacement.id(), fixture.second.rosterLockId());
+        for (UUID playerId : participantIds(fixture.first, fixture.second)) {
+            assertEquals(replacement, fixture.challenges.challengeForParticipant(playerId, 31_001L).orElseThrow());
+        }
+    }
+
+    @Test
     void partyChallengeLocksBothRostersAndIndexesEveryParticipant() {
         Fixture fixture = fixture(2, 2);
         DuelChallenge challenge = fixture.challenges.createPartyChallenge(

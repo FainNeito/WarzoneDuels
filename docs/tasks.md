@@ -1,5 +1,16 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-016** - Correct verified analytics, challenge expiry, and match-type review findings.
+  Tag: TDD
+  References: REQ-022, REQ-023, REQ-024; `docs/implementation.md#persistence-and-recovery`
+  Acceptance: H2 parent/participant writes are atomic on success and failure; caller transactions remain owned by callers; expired challenges can be replaced directly; NORMAL rejects multi-member teams but singleton and PARTY matches remain valid.
+  Evidence:
+  - Existing DuelAnalyticsStore.insert, initializeSchema, insertParticipants and java.sql.Connection transaction/savepoint APIs; H2 2.2.224 resolved by pom.xml.
+  - Existing DuelChallengeService.ensureRosterAvailable, challengeForParticipant, DuelChallengeServiceTest and ActiveDuelTeamTest.
+  - Existing org.junit.jupiter.api.Test, org.junit.jupiter.api.Assertions, java.util.List, java.util.UUID, java.lang.reflect.Field and sun.misc.Unsafe fixtures; org.bukkit.plugin.java.JavaPlugin logger inspected in the pinned Paper JAR; dev.minecraft.warzoneduels.WarzoneDuelsPlugin, dev.minecraft.warzoneduels.domain.DuelEndReason, dev.minecraft.warzoneduels.domain.DuelMatchType, dev.minecraft.warzoneduels.domain.analytics.DuelRecord and dev.minecraft.warzoneduels.domain.analytics.DuelRecordParticipant supply existing types.
+  - java.sql.Connection, java.sql.DriverManager, java.util.logging.Logger provide in-memory H2 execution and isolated logging; no new runtime dependencies.
+  Validation: review-runtime-red.log reproduces four failing scenarios on the real H2 store and competitive core; review-runtime-green.log passes 13 focused tests; review-runtime-verify.log passes all 68 tests and clean packaging. EARS passes. No new production imports/annotations; the ActiveDuel change is a small constructor invariant within documented brownfield debt, not a framework expansion.
+
 - [x] **TDD-015** - Correct playtest spawn/countdown, party announcements, explosive self-damage, and leader departure regressions.
   Tag: TDD
   References: REQ-009, REQ-016, REQ-019, REQ-020, REQ-021; `docs/implementation.md#match-execution`

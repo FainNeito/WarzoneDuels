@@ -135,13 +135,13 @@ public final class DuelChallengeService {
     }
 
     private void ensureRosterAvailable(DuelParty party, long nowEpochMs) {
-        if (party.isRosterLocked()) {
-            throw new IllegalStateException("A Duel Party roster is already locked by another challenge.");
-        }
         for (DuelParty.DuelPartyMember member : party.members()) {
             if (challengeForParticipant(member.playerId(), nowEpochMs).isPresent()) {
                 throw new IllegalStateException(member.name() + " is already part of another duel challenge.");
             }
+        }
+        if (party.isRosterLocked()) {
+            throw new IllegalStateException("A Duel Party roster is already locked by another challenge.");
         }
     }
 

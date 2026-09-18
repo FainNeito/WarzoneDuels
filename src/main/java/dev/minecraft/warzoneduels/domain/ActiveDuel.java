@@ -37,6 +37,9 @@ public final class ActiveDuel {
         if (teamOne.size() != teamTwo.size()) {
             throw new IllegalArgumentException("Active duel teams must have equal roster sizes.");
         }
+        if (teamOne.size() > 1 && type != DuelMatchType.PARTY) {
+            throw new IllegalArgumentException("Multi-member teams require a PARTY match.");
+        }
         if (!java.util.Collections.disjoint(teamOne.participantIds(), teamTwo.participantIds())) {
             throw new IllegalArgumentException("A player cannot appear on both active duel teams.");
         }
