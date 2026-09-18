@@ -1,14 +1,35 @@
 // Project-local Windows adaptation of SPEAR's MIT-licensed hooks/lib/state.sh.
 import fs from 'node:fs';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 const file = process.env.SPEAR_STATE_FILE || '.claude/spear-state.json';
-const state = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {version:1,phase:'idle'};
+function load() {
+  if (!fs.existsSync(file)) return {version:1,phase:'idle'};
+  const content = fs.readFileSync(file, 'utf8');
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch (cause) {
+    throw new Error('SPEAR state file is not valid JSON: ' + file, {cause});
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('SPEAR state file must contain a JSON object: ' + file);
+  }
+  return parsed;
+}
+const state = load();
 const [fn,...args] = process.argv.slice(2);
 const next = {'idle':['spec'],'spec':['spec-done'],'spec-done':['prove','arch'],'prove':['prove-done'],'prove-done':['engine'],'engine':['engine-done'],'engine-done':['arch'],'arch':['arch-done'],'arch-done':['refine'],'refine':['idle']};
 function save(s) {
   fs.mkdirSync(path.dirname(file),{recursive:true});
   s.lastUpdated = new Date().toISOString();
-  fs.writeFileSync(file,JSON.stringify(s,null,2)+'\n');
+  const temporary = file + '.' + randomUUID() + '.tmp';
+  try {
+    fs.writeFileSync(temporary,JSON.stringify(s,null,2)+'\n', {flag:'wx'});
+    fs.renameSync(temporary,file);
+  } finally {
+    fs.rmSync(temporary, {force:true});
+  }
   fs.appendFileSync(path.join(path.dirname(file),'spear-history.jsonl'),JSON.stringify(s)+'\n');
 }
 switch(fn) {

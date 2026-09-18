@@ -1,5 +1,14 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-017** - Harden requirement validation and state-file replacement.
+  Tag: TDD
+  References: REQ-025; `docs/implementation.md#spear-adoption`
+  Acceptance: Missing clauses at the next header and EOF fail; blank responses remain rejected; malformed JSON and non-object state report useful errors; successful transitions persist through a same-directory rename and failed replacements preserve previous state without temporary-file residue.
+  Evidence:
+  - Existing tools/spear/ears.mjs validate and CLI shim; tools/spear/state.mjs load, save and transition map.
+  - Node built-in node:test, node:assert/strict, node:fs, node:os, node:path, node:url, node:child_process, node:module and node:crypto APIs supply isolated subprocess fixtures, filesystem fault injection, same-directory rename, and unique temporary names. No npm dependencies.
+  Validation: review-tooling-red.log records five genuine failures; review-tooling-green.log passes six tests, including actual rename failure injection and all JSON primitive cases. Blank EARS responses were already rejected and the existing regexes were retained. EARS and review-tooling-verify.log pass (68 Java tests); no production layer changes or third-party imports.
+
 - [x] **TDD-016** - Correct verified analytics, challenge expiry, and match-type review findings.
   Tag: TDD
   References: REQ-022, REQ-023, REQ-024; `docs/implementation.md#persistence-and-recovery`

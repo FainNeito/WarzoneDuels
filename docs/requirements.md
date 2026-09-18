@@ -99,3 +99,7 @@ WHEN a leader creates a challenge after an earlier challenge expires THE SYSTEM 
 ### REQ-024 - Match type consistency
 
 IF a match contains multiple participants per team and its type is not PARTY THEN THE SYSTEM SHALL reject it while preserving valid singleton matches.
+
+### REQ-025 - Reliable SPEAR validation and state
+
+WHEN SPEAR tooling validates requirements or changes phase THE SYSTEM SHALL reject missing requirement clauses and malformed state, replace state through a same-directory temporary file, and preserve the prior state if replacement fails.

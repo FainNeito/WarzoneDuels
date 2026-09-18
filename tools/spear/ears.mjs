@@ -39,6 +39,9 @@ export function validate(text, filename) {
     const headerMatch = line.match(reqHeaderPattern);
 
     if (headerMatch) {
+      if (currentReqId) {
+        errors.push({id: currentReqId, file: filename, line: currentReqLine, reason: 'Missing EARS clause'});
+      }
       // New REQ header found
       currentReqId = `REQ-${headerMatch[1]}`;
       currentReqLine = i + 1; // 1-based line numbering
@@ -90,6 +93,10 @@ export function validate(text, filename) {
     // Mark as processed so we don't validate again
     currentReqId = null;
     currentReqLine = null;
+  }
+
+  if (currentReqId) {
+    errors.push({id: currentReqId, file: filename, line: currentReqLine, reason: 'Missing EARS clause'});
   }
 
   return {
