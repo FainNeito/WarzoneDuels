@@ -4,6 +4,7 @@ import dev.minecraft.warzoneduels.adapter.bukkit.persistence.PlayerStatsStore;
 import dev.minecraft.warzoneduels.domain.ActiveDuel;
 import dev.minecraft.warzoneduels.domain.DuelEndReason;
 import dev.minecraft.warzoneduels.domain.MatchParticipant;
+import dev.minecraft.warzoneduels.domain.TeamOutcomePolicy;
 import dev.minecraft.warzoneduels.domain.stats.PlayerDuelStats;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -38,11 +39,10 @@ public final class StatsService {
         if (duel == null) {
             return;
         }
-        MatchParticipant participantOne = duel.participantOne();
-        MatchParticipant participantTwo = duel.participantTwo();
         if (reason == DuelEndReason.DRAW) {
-            stats(participantOne.playerId(), participantOne.name()).recordDraw();
-            stats(participantTwo.playerId(), participantTwo.name()).recordDraw();
+            for (MatchParticipant participant : duel.participants()) {
+                stats(participant.playerId(), participant.name()).recordDraw();
+            }
             save();
             return;
         }
@@ -50,13 +50,16 @@ public final class StatsService {
             return;
         }
 
-        MatchParticipant winner = duel.participant(winnerId);
-        MatchParticipant loser = duel.other(winnerId);
-        if (winner == null || loser == null) {
+        if (!duel.contains(winnerId)) {
             return;
         }
-        stats(winner.playerId(), winner.name()).recordWin();
-        stats(loser.playerId(), loser.name()).recordLoss(reason == DuelEndReason.DISCONNECT_TIMEOUT);
+        TeamOutcomePolicy.Outcome outcome = TeamOutcomePolicy.outcome(duel, winnerId);
+        for (MatchParticipant winner : outcome.winners()) {
+            stats(winner.playerId(), winner.name()).recordWin();
+        }
+        for (MatchParticipant loser : outcome.losers()) {
+            stats(loser.playerId(), loser.name()).recordLoss(reason == DuelEndReason.DISCONNECT_TIMEOUT);
+        }
         save();
     }
 
