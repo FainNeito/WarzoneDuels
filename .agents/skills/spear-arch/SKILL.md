@@ -15,18 +15,18 @@ The architectural gate. Runs after `engine-done` on TDD tasks and after `spec-do
 
 Read the current task entry in `docs/tasks.md` and inspect its tag.
 
-- If tagged `TDD`: `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_assert_phase engine-done`.
-- If tagged `DOC` or `INFRA`: `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_assert_phase spec-done`.
+- If tagged `TDD`: `node tools/spear/state.mjs state_assert_phase engine-done`.
+- If tagged `DOC` or `INFRA`: `node tools/spear/state.mjs state_assert_phase spec-done`.
 
 On non-zero exit, surface the helper's message and stop.
 
 ### Step 2 — Set phase to `arch`
 
-`${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_set_phase arch`.
+`node tools/spear/state.mjs state_set_phase arch`.
 
 ### Step 3 — Read layer rules
 
-Parse the consumer project's `docs/implementation.md` section `## Layer Dependency Rules`. Three layers by path prefix:
+Parse the consumer project's `docs/implementation.md` section `## Layer Dependency Rules`. In WarzoneDuels, paths are relative to `src/main/java/dev/minecraft/warzoneduels/`; `app/**` is application and `adapter/**` is infrastructure. Apply the documented brownfield exceptions to unchanged coupling, never to new coupling. Three conceptual layers:
 
 - `domain/**` — may depend on nothing beyond itself + stdlib.
 - `application/**` — may depend only on `domain/**` + stdlib.
@@ -65,11 +65,11 @@ Compute new import paths introduced since the task baseline. Each must appear as
 Add evidence for: <import>, <import> …
 ```
 
-The gate is hard: do NOT advance phase. Only a `failureReason` may be written to `.claude/spear-state.json`. The agent must update `Evidence:` and re-invoke.
+The gate is hard: do NOT advance phase. Record the diagnostic in task evidence, update `Evidence:`, and re-invoke without hand-editing state.
 
 ### Step 8 — On violation
 
-If Steps 5–7 produced findings, emit a report grouped by file. Stay in `phase=arch` and record `failureReason` in `.claude/spear-state.json`. Suggest fixes:
+If Steps 5–7 produced findings, emit a report grouped by file. Stay in `phase=arch` and record the failure reason in task evidence. Suggest fixes:
 
 - Layer break: move the type, or introduce a port interface in `domain/` with the adapter in `infrastructure/`.
 - Forbidden annotation: extract framework wiring to an `infrastructure/` adapter; keep domain annotation-free.
@@ -77,7 +77,7 @@ If Steps 5–7 produced findings, emit a report grouped by file. Stay in `phase=
 
 ### Step 9 — On clean scan
 
-`${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_set_phase arch-done`.
+`node tools/spear/state.mjs state_set_phase arch-done`.
 
 ---
 
@@ -93,4 +93,4 @@ DOC / INFRA path: `spec-done → [spear:arch] → arch-done → spear:refine`.
 
 - `docs/requirements.md` REQ-031, REQ-032, REQ-060, REQ-061, REQ-062, REQ-063, REQ-064, REQ-065, REQ-067
 - `docs/implementation.md` §2 Layer Dependency Rules, `## Forbidden Domain Annotations`, §3.6 state helpers
-- `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh`
+- `node tools/spear/state.mjs`

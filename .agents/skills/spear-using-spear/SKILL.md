@@ -42,7 +42,7 @@ Five phases, executed in order, one task at a time:
 
 ## State machine
 
-State is tracked in `.claude/spear-state.json` in the project root. This file is gitignored. The state helper is at `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh`.
+State is tracked in `.claude/spear-state.json` in the project root. This file is gitignored. Run the local helper with `node tools/spear/state.mjs <operation> <arguments>` from the repository root. Select the task with `state_task <taskId> <reqId>` while idle, before entering spec. Use `state_record_test <testFile> <testName> red|green` only during prove/engine, and `state_clear` only during refine. The helper validates transitions; it does not support arbitrary state-field edits. Record diagnostic details in task evidence instead.
 
 Valid phases: `idle | spec | spec-done | prove | prove-done | engine | engine-done | arch | arch-done | refine`
 

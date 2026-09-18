@@ -15,11 +15,11 @@ DOC and INFRA tasks skip this skill entirely — they flow `spec-done → arch` 
 
 ### Step 1 — Assert predecessor phase
 
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_assert_phase prove-done`. On non-zero exit, surface the printed message and stop — do NOT proceed.
+Shell out to `node tools/spear/state.mjs state_assert_phase prove-done`. On non-zero exit, surface the printed message and stop — do NOT proceed.
 
 ### Step 2 — Set phase to `engine`
 
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_set_phase engine`.
+Shell out to `node tools/spear/state.mjs state_set_phase engine`.
 
 ### Step 3 — Read state
 
@@ -43,7 +43,7 @@ Execute the test identified by `testFile` and `testName`. If the test passes, pr
 If the test is still red:
 
 - Remain in `phase=engine`. Do NOT advance state.
-- Record the failure reason: update `.claude/spear-state.json` with a `failureReason` field describing why the test still fails.
+- Record the failure reason in the task's evidence log; use only the local state helper for phase/test state.
 - Diagnose and fix the implementation, then re-run from Step 4.
 
 Do NOT advance until the specific test is green.
@@ -65,14 +65,14 @@ Do NOT call `state_record_test` or `state_set_phase engine-done`. The gate is ha
 Shell out to:
 
 ```
-${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_record_test <testFile> <testName> green
+node tools/spear/state.mjs state_record_test <testFile> <testName> green
 ```
 
 Where `<testFile>` and `<testName>` are the values recovered from state in Step 3.
 
 ### Step 8 — Set phase to `engine-done`
 
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_set_phase engine-done`.
+Shell out to `node tools/spear/state.mjs state_set_phase engine-done`.
 
 ---
 
@@ -96,4 +96,4 @@ spec-done  →  spear:arch  (no prove/engine)
 
 - `docs/requirements.md` REQ-031, REQ-032, REQ-047
 - `docs/implementation.md` §3.6 (state helpers), §4.2 (TDD cycle), §5 (briefing contract)
-- `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh`
+- `node tools/spear/state.mjs`

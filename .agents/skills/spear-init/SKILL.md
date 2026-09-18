@@ -30,7 +30,7 @@ Ask the user (in this order): project purpose, primary users, top 3–5 goals. D
 **Validate every REQ entry BEFORE writing** by shelling out to the EARS validator (takes a file path — write the candidate to a temp file first):
 
 ```
-node ${CLAUDE_PLUGIN_ROOT}/hooks/lib/ears.mjs <tmpfile>
+node tools/spear/ears.mjs <tmpfile>
 ```
 
 Exit 0 = valid. Non-zero = reject and re-draft. REQ-IDs are the next free integer above the max existing (padded to three digits, e.g. `REQ-001`); never re-use or renumber.

@@ -25,13 +25,9 @@ Stop immediately. Do NOT mutate any state.
 
 ### Step 2 — Assert predecessor phase
 
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_assert_phase spec-done`. On non-zero exit, surface the printed message and stop — do NOT proceed.
+Shell out to `node tools/spear/state.mjs state_assert_phase spec-done`. On non-zero exit, surface the printed message and stop — do NOT proceed.
 
-### Step 3 — Set phase to `prove`
-
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_set_phase prove`.
-
-### Step 4 — Evidence gate
+### Step 3 — Evidence gate
 
 Read the `Evidence:` block for the current task in `docs/tasks.md`. If the block contains only whitespace or a single placeholder space, refuse to proceed:
 
@@ -39,7 +35,11 @@ Read the `Evidence:` block for the current task in `docs/tasks.md`. If the block
 Evidence block is empty for task <taskId>. Populate Evidence: before invoking spear:prove.
 ```
 
-Do NOT call `state_set_phase` beyond `prove`. The task must be re-specced with real evidence before continuing.
+Do NOT change phase. Remain in `spec-done`, populate the evidence, and retry from Step 2.
+
+### Step 4 — Set phase to `prove`
+
+Only after the initial Evidence gate succeeds, run `node tools/spear/state.mjs state_set_phase prove`.
 
 ### Step 5 — Write the failing test
 
@@ -77,14 +77,14 @@ Do NOT call `state_record_test` or `state_set_phase prove-done`. The agent must 
 Shell out to:
 
 ```
-${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_record_test <testFile> <testName> red
+node tools/spear/state.mjs state_record_test <testFile> <testName> red
 ```
 
 Where `<testFile>` is the path to the test file and `<testName>` is the individual test or spec name that is failing.
 
 ### Step 9 — Set phase to `prove-done`
 
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_set_phase prove-done`.
+Shell out to `node tools/spear/state.mjs state_set_phase prove-done`.
 
 ---
 
@@ -108,4 +108,4 @@ spec-done  →  spear:arch  (no prove/engine)
 
 - `docs/requirements.md` REQ-030, REQ-031, REQ-032, REQ-046, REQ-091, REQ-092
 - `docs/implementation.md` §3.6 (state helpers), §4.2 (TDD cycle), §5 (briefing contract)
-- `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh`
+- `node tools/spear/state.mjs`

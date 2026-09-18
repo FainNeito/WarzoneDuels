@@ -23,17 +23,17 @@ SPEAR defaults apply: `org.springframework.*`, `jakarta.persistence.*`, `javax.p
 
 `MatchTeam` represents one to three unique participants. `ActiveDuel` keeps its legacy singleton accessors while exposing team-aware participant and opponent lookup. `DuelParty` owns an editable roster until a challenge-specific lock is acquired. `DuelChallenge` owns immutable roster and rule snapshots plus participant acceptance state.
 
-The application layer will own registries, invitation expiry, player-to-party indexes, challenge lifecycle, command authorization, and conversion of a ready challenge into a match. Bukkit commands and scheduled expiry are adapters around those policies.
+The application layer owns registries, invitation expiry, player-to-party indexes, challenge lifecycle, command authorization, and conversion of a ready challenge into a match. Bukkit commands and scheduled expiry are adapters around those policies. Challenge creation releases expired participant contracts before checking roster locks. Multi-member active matches require PARTY; singleton matches preserve existing compatibility.
 
 ## Persistence and recovery
 
-Existing one-versus-one runtime files must remain readable. Team persistence needs an explicit schema version and atomic migration path before party matches can be enabled. Failure to load a team match must retain recovery data and must never synthesize a winner.
+Existing one-versus-one runtime files remain readable alongside version-2 full-team snapshots. Failure to load a team match must retain recovery data and must never synthesize a winner. Analytics writes commit the parent and participant rows together. Failed writes roll back together; a caller-owned transaction uses a savepoint without committing the caller's unrelated changes.
 
 ## Match execution
 
 Arena team indexes are zero-based: team one uses 0 and team two uses 1. The participant index and countdown lock must be established before entry teleports. Party victory announcements name every snapshotted winning member, including eliminated teammates. Unlocked leader departure disbands the social roster; an already snapshotted match retains its participants and disconnect policy.
 
-The current arena has two spawn positions and the runtime assumes one participant per side in wagers, death handling, disconnects, statistics, and cleanup. Party execution will not be enabled until all of those paths iterate team rosters, arena configuration provides six positions, and regression tests preserve one-versus-one semantics.
+Arena configuration supports three positions per side while preserving legacy spawn1/spawn2 settings. Team preparation, deaths, disconnects, statistics, and cleanup iterate complete rosters. Party wagers remain rejected until a split policy is approved; existing one-versus-one wagers are retained.
 
 The optional match-duration limit starts when combat is released after the opening countdown. Zero disables the limit and preserves death-only duels. A positive limit concludes an unfinished duel through the existing draw path so wagers refund and ordinary participant, spectator, analytics, and arena cleanup remain centralized.
 

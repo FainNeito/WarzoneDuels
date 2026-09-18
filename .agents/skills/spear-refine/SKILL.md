@@ -13,7 +13,7 @@ Final step of the SPEAR cycle. Enters from `arch-done` and exits to `idle`, comp
 
 ### Step 1 — Assert predecessor phase
 
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_assert_phase arch-done`.
+Shell out to `node tools/spear/state.mjs state_assert_phase arch-done`.
 
 If the command exits non-zero it will print:
 
@@ -25,7 +25,7 @@ Stop immediately and surface that message. Do NOT proceed.
 
 ### Step 2 — Set phase to `refine`
 
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_set_phase refine`.
+Shell out to `node tools/spear/state.mjs state_set_phase refine`.
 
 ### Step 3 — Read state
 
@@ -45,7 +45,7 @@ Perform a behavior-preserving cleanup of code introduced during the engine phase
 Execute the project's full test suite. If any test is red:
 
 - Remain in `phase=refine`. Do NOT advance state.
-- Record `failureReason` in `.claude/spear-state.json`.
+- Record the failure reason in the task's evidence log; do not hand-edit state.
 - Fix or revert the refactor changes and retry from Step 4.
 
 Do NOT proceed until the full suite is green.
@@ -61,7 +61,7 @@ If new sources (libraries, docs, APIs) were consulted during the refactor that a
 
 ### Step 7 — Clear state
 
-Shell out to `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh state_clear`.
+Shell out to `node tools/spear/state.mjs state_clear`.
 
 This resets `phase` to `idle` and clears `currentTaskId`, `reqId`, `testFile`, `testName`, `testStatus`, and `evidenceCited` from `.claude/spear-state.json`.
 
@@ -85,4 +85,4 @@ Enters from `arch-done`. On any test failure stays in `phase=refine`. On success
 
 - `docs/requirements.md` REQ-048
 - `docs/implementation.md` §3.6 state helpers, §4.2 TDD cycle
-- `${CLAUDE_PLUGIN_ROOT}/hooks/lib/state.sh`
+- `node tools/spear/state.mjs`

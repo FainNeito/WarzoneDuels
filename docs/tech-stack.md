@@ -1,12 +1,15 @@
 # WarzoneDuels technology stack
 
-- Language: Java 21 source and target
+- Language and runtime baseline: Java 25 (`maven.compiler.release=25`)
 - Build: Maven
-- Server API: Paper 1.21.11-R0.1-SNAPSHOT, provided scope
+- Default server API: Paper `26.2.build.123-stable`, provided scope
+- Compatibility profile: `paper-26.3` pins Paper `26.3.build.8-alpha`
 - Analytics integration: Plan API 5.7-R0.2, provided scope
 - Persistence: H2 2.2.224 plus YAML stores
 - Tests: JUnit Jupiter 5.11.4
 - Packaging: Maven Shade plugin with H2 embedded
 - Optional runtime integrations: Vault, EnthusiaTeleport, EnthusiaTags, NotBounties, CombatLogX, and Plan
 
-Local verification currently uses JDK 23 targeting Java 21 because a JDK 21 installation is not available on this workstation. The existing Maven compiler configuration emits a warning recommending `--release 21`; this is tracked as build debt rather than silently treated as Java 21 runtime validation.
+Local verification uses JDK 25.0.3 and Maven 3.9.9. Run `mvn -B -ntp clean verify` and repeat with `-Ppaper-26.3`; run the stable build last for the testing JAR. SPEAR tools additionally require Node.js and are tested with `node --test tools/spear/tooling.test.mjs`.
+
+Compilation against both pinned APIs is not live server/client approval. Keep the staging checklist in MANUAL_TESTING.md.

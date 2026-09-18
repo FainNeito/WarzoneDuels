@@ -1,5 +1,15 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **DOC-002** - Align local SPEAR instructions, attribution, and testing documentation.
+  Tag: DOC
+  References: REQ-014, REQ-018, REQ-022, REQ-023, REQ-024, REQ-025; `docs/implementation.md#spear-adoption`
+  Acceptance: Skills use local helpers; the initial evidence gate precedes entering prove and later import-gate retries remain supported; platform and verification documents reflect the current baseline; preserve the full verified upstream notice with explicit provenance; distinguish the updated testing artifact as 1.0.3.
+  Evidence:
+  - Existing tools/spear/state.mjs and ears.mjs, AGENTS.md, pom.xml and plugin.yml define local commands and pinned platform versions.
+  - Upstream BadgersMC/spear-plugin revision 2c91bae README declares MIT; its reference-implementations/ts-spear/LICENSE contains Copyright (c) 2026 BadgersMC and the full MIT text. No separate root/helpers notice exists in that snapshot; attribution provenance must remain explicit.
+  - review-runtime-verify.log and review-tooling-green.log record the current Java and Node regression results.
+  Validation: Manual gate-order inspection and helper-reference scan pass; later import-gate retry remains Step 7. EARS and six Node tests pass. review-26.3-verify.log and review-26.2-verify.log each pass 68 Java tests. Stable API built last as WarzoneDuels-1.0.3.jar. Upstream attribution uncertainty is documented rather than inventing a separate copyright.
+
 - [x] **TDD-017** - Harden requirement validation and state-file replacement.
   Tag: TDD
   References: REQ-025; `docs/implementation.md#spear-adoption`
