@@ -93,15 +93,27 @@ public final class DuelAnalyticsStore {
                 connection.releaseSavepoint(savepoint);
             }
         } catch (SQLException ex) {
-            if (autoCommit) {
-                connection.rollback();
-            } else {
-                connection.rollback(savepoint);
-                connection.releaseSavepoint(savepoint);
+            try {
+                if (autoCommit) {
+                    connection.rollback();
+                } else {
+                    connection.rollback(savepoint);
+                    connection.releaseSavepoint(savepoint);
+                }
+            } catch (SQLException rollbackFailure) {
+                ex.addSuppressed(rollbackFailure);
+                // Never enable auto-commit on an uncertain transaction: that could persist partial data.
+                Connection failedConnection = connection;
+                connection = null;
+                try {
+                    failedConnection.close();
+                } catch (SQLException closeFailure) {
+                    ex.addSuppressed(closeFailure);
+                }
             }
             throw ex;
         } finally {
-            if (autoCommit) {
+            if (autoCommit && connection != null) {
                 connection.setAutoCommit(true);
             }
         }

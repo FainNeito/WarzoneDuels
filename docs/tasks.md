@@ -1,5 +1,14 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-018** - Prevent implicit commits after a rollback failure.
+  Tag: TDD
+  References: REQ-022; `docs/implementation.md#persistence-and-recovery`
+  Acceptance: A failed rollback closes/discards the uncertain connection without setting auto-commit true; ordinary commit failures roll back and permit retry; the original SQL failure retains rollback/close diagnostic causes.
+  Evidence:
+  - TDD-016 real H2 regression fixture and DuelAnalyticsStore.insertAtomically; Connection.setAutoCommit(true) commits an active transaction, so it must not follow a failed rollback.
+  - Existing java.sql.Connection, java.sql.SQLException and JDK java.lang.reflect.Proxy / java.lang.reflect.InvocationTargetException provide deterministic JDBC fault injection without new dependencies.
+  Validation: review-rollback-red.log reproduces the unsafe auto-commit restoration after rollback failure; review-rollback-green.log passes six H2 transaction tests. review-final-26.3.log and review-final-26.2.log each pass all 70 Java tests; six Node tests and EARS pass. Persistence-only changes add no layer dependency. Stable build last; SPEAR state returns to idle.
+
 - [x] **DOC-002** - Align local SPEAR instructions, attribution, and testing documentation.
   Tag: DOC
   References: REQ-014, REQ-018, REQ-022, REQ-023, REQ-024, REQ-025; `docs/implementation.md#spear-adoption`

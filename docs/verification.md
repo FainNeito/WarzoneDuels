@@ -21,13 +21,13 @@ Brownfield baseline before SPEAR adoption: Maven clean verify passed 26 tests wi
 | REQ-016 | `ExplosiveTeamCombatPolicyTest` plus the focused combat/spoils suites cover attributed enemies, teammate cancellation, unattributed party explosions, and live adapter wiring | Crystal, anchor, and TNT-minecart combat with multiple real clients |
 | REQ-017 | `ExplosiveTeamCombatPolicyTest` covers complete-team double elimination; source contracts verify next-tick batching and persistent archived-loadout restoration | Same-explosion final deaths, respawn, and restart-before-respawn staging |
 | REQ-018 | Java 25 clean verification against pinned Paper 26.2 stable and Paper 26.3 alpha APIs; see the latest review verification logs for current test counts | Full startup and gameplay matrix on actual Paper 26.2 and 26.3 servers with dependencies |
-| REQ-022 | `DuelAnalyticsTransactionTest`: complete write, partial-batch rollback/retry, duplicate parent, and caller-owned transaction isolation on real in-memory H2 | Disk/server interruption staging |
+| REQ-022 | `DuelAnalyticsTransactionTest`: complete write, partial-batch rollback/retry, duplicate parent, caller-owned transaction isolation, injected commit failure and failed-rollback connection disposal on real in-memory H2 | Disk/server interruption staging |
 | REQ-023 | `DuelChallengeServiceTest.expiredChallengeCanBeReplacedWithoutAnIntermediateLookup` | Expiry under server load |
 | REQ-024 | `ActiveDuelTeamTest.normalRejectsMultiMemberTeamsButBothTypesAllowSingletons` | Corrupt persisted match rejection on staging |
 | REQ-025 | `tools/spear/tooling.test.mjs`: missing clauses, malformed JSON and state shape, same-directory rename, failure preservation and cleanup | None |
 
 Automated tests and a clean package build do not approve production deployment. Paper/client behavior, plugin interoperability, restart recovery, and latency-sensitive combat remain staging checks.
 
-Review-fix baseline: 68 Java tests and six Node tooling tests pass. The 62-test result below is historical 1.0.2 evidence, not the latest count.
+Latest review-fix baseline: 70 Java tests pass on each pinned Paper API (`review-final-26.2.log`, `review-final-26.3.log`), and six Node tooling tests pass. The stable build produces `target/WarzoneDuels-1.0.3.jar`. The 62-test result below is historical 1.0.2 evidence, not the latest count.
 
 1.0.2 regression evidence: `PlaytestRegressionTest` executes all six DuelService spawn lookups against ArenaDefinition, checks complete-party victory labels, leader disband/index/invitation cleanup, and explosive self-versus-teammate damage (REQ-019 through REQ-021). Both pinned Paper API builds pass 62 tests. Live countdown, arrival, leader logout notification, and self-explosion checks remain in MANUAL_TESTING.md.

@@ -92,6 +92,8 @@ WHEN a participant damages themselves with an explosive THE SYSTEM SHALL allow s
 
 WHEN a duel result is persisted THE SYSTEM SHALL store its parent and participant records atomically, roll back failed inserts, and preserve any caller-owned transaction and connection mode.
 
+IF analytics rollback fails THEN THE SYSTEM SHALL discard the uncertain connection without restoring auto-commit or reusing it for later writes.
+
 ### REQ-023 - Expired roster reuse
 
 WHEN a leader creates a challenge after an earlier challenge expires THE SYSTEM SHALL release expired roster locks before checking availability without requiring an intermediate lookup.

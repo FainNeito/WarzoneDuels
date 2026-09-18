@@ -20,6 +20,53 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DuelAnalyticsTransactionTest {
     @Test
+    void failedRollbackDiscardsConnectionWithoutImplicitCommit() throws Exception {
+        try (Connection connection = database()) {
+            var restoredAutoCommit = new java.util.concurrent.atomic.AtomicBoolean();
+            Connection faulty = (Connection) java.lang.reflect.Proxy.newProxyInstance(
+                Connection.class.getClassLoader(), new Class<?>[]{Connection.class}, (proxy, method, args) -> {
+                    if (method.getName().equals("rollback")) throw new java.sql.SQLException("injected rollback failure");
+                    if (method.getName().equals("setAutoCommit") && Boolean.TRUE.equals(args[0])) {
+                        restoredAutoCommit.set(true);
+                    }
+                    try { return method.invoke(connection, args); }
+                    catch (java.lang.reflect.InvocationTargetException ex) { throw ex.getCause(); }
+                });
+            DuelAnalyticsStore store = store(faulty);
+            store.insert(record("failed", true));
+            assertFalse(restoredAutoCommit.get(), "auto-commit would commit the partial record");
+            assertTrue(connection.isClosed());
+            Field connectionField = DuelAnalyticsStore.class.getDeclaredField("connection");
+            connectionField.setAccessible(true);
+            assertNull(connectionField.get(store));
+            assertDoesNotThrow(() -> store.insert(record("later", false)));
+        }
+    }
+
+    @Test
+    void commitFailureRollsBackAndPermitsRetry() throws Exception {
+        try (Connection connection = database()) {
+            var failCommit = new java.util.concurrent.atomic.AtomicBoolean(true);
+            Connection faulty = (Connection) java.lang.reflect.Proxy.newProxyInstance(
+                Connection.class.getClassLoader(), new Class<?>[]{Connection.class}, (proxy, method, args) -> {
+                    if (method.getName().equals("commit") && failCommit.getAndSet(false)) {
+                        throw new java.sql.SQLException("injected commit failure");
+                    }
+                    try { return method.invoke(connection, args); }
+                    catch (java.lang.reflect.InvocationTargetException ex) { throw ex.getCause(); }
+                });
+            DuelAnalyticsStore store = store(faulty);
+            store.insert(record("retry", false));
+            assertEquals(0, rows(connection, "duel_records"));
+            assertEquals(0, rows(connection, "duel_record_participants"));
+            assertTrue(connection.getAutoCommit());
+            store.insert(record("retry", false));
+            assertEquals(1, rows(connection, "duel_records"));
+            assertEquals(2, rows(connection, "duel_record_participants"));
+        }
+    }
+
+    @Test
     void successStoresParentAndEveryParticipant() throws Exception {
         try (Connection connection = database()) {
             DuelAnalyticsStore store = store(connection);
