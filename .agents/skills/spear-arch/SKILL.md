@@ -11,18 +11,13 @@ The architectural gate. Runs after `engine-done` on TDD tasks and after `spec-do
 
 ## Procedure
 
-### Step 1 — Assert predecessor phase
+### Step 1 — Assert initial or resumable phase
 
-Read the current task entry in `docs/tasks.md` and inspect its tag.
+Read the current phase from `.claude/spear-state.json`. Accept engine-done or spec-done for an initial invocation, or `arch` when resuming this same task after a failed gate. Reject every other phase. Recheck the current task ID and its Evidence before resuming; do not reset state or skip remaining gates.
 
-- If tagged `TDD`: `node tools/spear/state.mjs state_assert_phase engine-done`.
-- If tagged `DOC` or `INFRA`: `node tools/spear/state.mjs state_assert_phase spec-done`.
+### Step 2 — Enter only on the initial invocation
 
-On non-zero exit, surface the helper's message and stop.
-
-### Step 2 — Set phase to `arch`
-
-`node tools/spear/state.mjs state_set_phase arch`.
+If already in `arch`, do not call `state_set_phase` again. Otherwise use `node tools/spear/state.mjs state_set_phase arch`. The architecture entry phase is `engine-done` for TDD and `spec-done` for DOC/INFRA.
 
 ### Step 3 — Read layer rules
 

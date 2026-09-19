@@ -189,7 +189,7 @@ The repository began SPEAR adoption with 14 passing tests. Initial team, party, 
   Evidence:
   - Existing `MANUAL_TESTING.md` and `PLAYER_GUIDE.md` define the current operator and player behavior.
   - Maven Shade output is the existing deployable artifact format.
-  Validation: `final-testing-jar-verify.log` records the original acceptance build; the latest Java 25 stable build is recorded in `paper-26.2-java25-verify.log` with all 58 tests passing. The current shaded testing JAR is `target/WarzoneDuels-1.0.1.jar` (3,641,773 bytes), SHA-256 `9C396553B20F2F5B6A3D3E3227AB05892E99F5CF2D3E96AB688C34D76D230A3F`. Its class-file major version is 69 and packaged `api-version` is `26.2`. `MANUAL_TESTING.md` includes 1v1, complete 2v2/3v3, explosive/double-KO, duel-duration, and Paper 26.x live-server checks; live Paper/client testing remains for the operator.
+  Validation: `final-testing-jar-verify.log` records the original acceptance build; the historical Java 25 stable build at that stage is recorded in `paper-26.2-java25-verify.log` with all 58 tests passing. That historical shaded testing JAR was `target/WarzoneDuels-1.0.1.jar` (3,641,773 bytes), SHA-256 `9C396553B20F2F5B6A3D3E3227AB05892E99F5CF2D3E96AB688C34D76D230A3F`. Its class-file major version is 69 and packaged `api-version` is `26.2`. `MANUAL_TESTING.md` includes 1v1, complete 2v2/3v3, explosive/double-KO, duel-duration, and Paper 26.x live-server checks; live Paper/client testing remains for the operator.
 
 - [x] **TDD-013** - Add an optional duel-duration limit that defaults to unlimited.
   Tag: TDD
@@ -235,4 +235,15 @@ The repository began SPEAR adoption with 14 passing tests. Initial team, party, 
   - DuelSettings carries exact item/ruleset toggles; ActiveDuel preserves the challenger as team one for normal challenges; concludeDuel receives the online winner before healAfterDuel.
   - PlayerStatsStore already owns atomic stats.yml persistence and is the stable provider file consumed read-only by EnthusiaTags.
   - Current repository has participant wagers but no spectator-betting subsystem; WarzoneDuels REQ-012 keeps guild integration outside the core.
-  Validation: focused advancement evidence tests pass 6/6; full Java 25 / Paper 26.2 Maven verify passes 76 tests with zero failures/errors/skips and packages target/WarzoneDuels-1.0.3.jar.
+  Validation: focused advancement evidence tests pass 6/6; full Java 25 / Paper 26.2 Maven verify passes 76 Java tests (separate from six Node tooling tests) with zero failures/errors/skips and packages target/WarzoneDuels-1.0.3.jar.
+
+## PR cleanup: workflow retries and verification reporting
+
+- [x] **DOC-003** - Make engine/architecture/refine retryable without bypassing gates.
+  Tag: DOC
+  References: REQ-014, REQ-025; docs/implementation.md#spear-adoption
+  Acceptance: resumes retain their current phase; refine requires EARS, Node tests, and clean Maven verify; historical counts remain labeled rather than overwritten.
+  Evidence:
+  - Existing local phase helpers and phase skill procedures; no gameplay or domain changes.
+  - Actual clean verification logs from this PR-cleanup pass will be recorded separately from earlier acceptance builds.
+  Validation: PR-cleanup clean verify passed 76 Java tests; the separate Node tooling run passed 6 tests; EARS passed. This is later than the historical 70-Java/6-Node baseline, not a relabeling of that baseline. Current local artifact is WarzoneDuels-1.0.3.jar. No gameplay files changed.

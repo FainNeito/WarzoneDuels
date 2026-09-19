@@ -11,21 +11,13 @@ Final step of the SPEAR cycle. Enters from `arch-done` and exits to `idle`, comp
 
 ## Procedure
 
-### Step 1 — Assert predecessor phase
+### Step 1 — Assert initial or resumable phase
 
-Shell out to `node tools/spear/state.mjs state_assert_phase arch-done`.
+Read the current phase from `.claude/spear-state.json`. Accept arch-done for an initial invocation, or `refine` when resuming this same task after a failed gate. Reject every other phase. Recheck the current task ID and its Evidence before resuming; do not reset state or skip remaining gates.
 
-If the command exits non-zero it will print:
+### Step 2 — Enter only on the initial invocation
 
-```
-spear requires phase=arch-done; current phase=<actual>
-```
-
-Stop immediately and surface that message. Do NOT proceed.
-
-### Step 2 — Set phase to `refine`
-
-Shell out to `node tools/spear/state.mjs state_set_phase refine`.
+If already in `refine`, do not call `state_set_phase` again. Otherwise use `node tools/spear/state.mjs state_set_phase refine`. The architecture entry phase is `engine-done` for TDD and `spec-done` for DOC/INFRA.
 
 ### Step 3 — Read state
 
@@ -42,7 +34,13 @@ Perform a behavior-preserving cleanup of code introduced during the engine phase
 
 ### Step 5 — Run the full test suite
 
-Execute the project's full test suite. If any test is red:
+Run all mandatory final gates before closing the task:
+
+1. `node tools/spear/ears.mjs docs/requirements.md`
+2. `node --test tools/spear/*.test.mjs`
+3. `mvn --batch-mode --no-transfer-progress clean verify`
+
+Record Java and Node test counts separately. A test-only invocation does not replace clean package verification. If any gate fails:
 
 - Remain in `phase=refine`. Do NOT advance state.
 - Record the failure reason in the task's evidence log; do not hand-edit state.
