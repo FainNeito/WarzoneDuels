@@ -520,6 +520,7 @@ public final class DuelService {
             settings,
             System.currentTimeMillis()
         );
+        statsService.recordChallengeSent(requester.getUniqueId(), requester.getName());
         builders.remove(requester.getUniqueId());
         sendMessage(requester, "messages.request-sent", PLAYER_PLACEHOLDER, target.getName());
         sendRequestDetails(target, pendingRequest);
@@ -560,6 +561,7 @@ public final class DuelService {
             challengeService.cancel(requester.getUniqueId(), System.currentTimeMillis());
             return;
         }
+        statsService.recordChallengeSent(requester.getUniqueId(), requester.getName());
         builders.remove(requester.getUniqueId());
         String contract = prefix + ChatColor.GOLD + teamLabel(challenge.challengerTeam()) + ChatColor.YELLOW + " vs "
             + ChatColor.GOLD + teamLabel(challenge.opponentTeam()) + ChatColor.YELLOW + ": use /duel accept to review and confirm.";
@@ -858,6 +860,11 @@ public final class DuelService {
         participant.setDrawRequested(true);
         sendToParticipants("messages.draw-requested", PLAYER_PLACEHOLDER, player.getName());
         if (TeamMatchPolicy.allSurvivorsRequestedDraw(activeDuel, eliminatedParticipantIds)) {
+            for (MatchParticipant agreeingParticipant : activeDuel.participants()) {
+                if (!eliminatedParticipantIds.contains(agreeingParticipant.playerId())) {
+                    statsService.recordMutualDraw(agreeingParticipant.playerId(), agreeingParticipant.name());
+                }
+            }
             concludeDuel((Player) null, DuelEndReason.DRAW, true);
             return;
         }

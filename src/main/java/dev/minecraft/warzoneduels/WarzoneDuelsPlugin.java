@@ -190,6 +190,10 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
         return activeSpoilsService;
     }
 
+    public StatsService statsService() {
+        return statsService;
+    }
+
     public ArenaTerrainService arenaTerrainService() {
         return activeArenaTerrainService;
     }

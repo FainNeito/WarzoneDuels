@@ -105,3 +105,15 @@ IF a match contains multiple participants per team and its type is not PARTY THE
 ### REQ-025 - Reliable SPEAR validation and state
 
 WHEN SPEAR tooling validates requirements or changes phase THE SYSTEM SHALL reject missing requirement clauses and malformed state, replace state through a same-directory temporary file, and preserve the prior state if replacement fails.
+
+### REQ-026 - Advancement evidence counters
+
+WHEN a valid duel challenge is sent, captured spoils are withdrawn, all surviving participants agree to a draw, or a duel winner satisfies an approved ruleset or low-health condition THE SYSTEM SHALL persist the corresponding per-player advancement evidence counter in stats.yml without changing ordinary match statistics.
+
+### REQ-027 - Advancement evidence semantics
+
+WHEN a one-versus-one challenger wins with a non-default ruleset THE SYSTEM SHALL record challenger-custom-rules evidence, WHEN a player wins with Ender Pearls and Wind Charges both disabled THE SYSTEM SHALL record restricted-mobility evidence, and WHEN a one-versus-one kill winner has less than four health points before post-duel healing THE SYSTEM SHALL record low-health evidence.
+
+### REQ-028 - Advancement integration boundary
+
+THE SYSTEM SHALL expose only durable WarzoneDuels evidence needed by the advancement consumer and SHALL NOT implement guild-war achievements, spectator-betting achievements, or reward payouts as part of this slice.

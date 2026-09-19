@@ -223,3 +223,16 @@ The repository began SPEAR adoption with 14 passing tests. Initial team, party, 
   - Paper's official API documentation identifies the currently consulted Paper 26.3 API as `26.3.build.8-alpha`.
   - Existing `pom.xml`, `plugin.yml`, Maven compiler, Surefire, Shade, and the 58-test suite define the local build and compatibility surface.
   Validation: `paper-26.2-java25-verify.log` passes EARS validation and all 58 tests against `26.2.build.123-stable`; `paper-26.3-java25-verify.log` passes all 58 tests against `26.3.build.8-alpha`. The stable 26.2 build was run last, emits Java class-file major version 69, packages `api-version: 26.2`, and produced the checksum-recorded testing JAR.
+
+- [x] **TDD-019** - Persist provider-owned advancement evidence for the remaining non-guild duel achievements.
+  Tag: TDD
+  References: REQ-026, REQ-027, REQ-028; docs/implementation.md persistence-and-recovery and match-execution.
+  Acceptance: stats.yml durably records counters for valid challenges sent, spoils withdrawals, mutual draws, challenger wins under non-default rules, wins with pearls and wind charges disabled, and 1v1 kill wins below four health before healing. Existing wins/streaks remain unchanged. Guild-war and spectator-betting achievements remain absent.
+  Evidence:
+  - DuelService.sendRequest creates a valid DuelRequest only after request safety and wager checks; DuelRequest.requesterId identifies the challenger.
+  - SpoilsService.claimSingleItem and claimAll are the successful withdrawal boundaries.
+  - DuelService.requestDraw marks participant consent and concludes only when TeamMatchPolicy.allSurvivorsRequestedDraw is true.
+  - DuelSettings carries exact item/ruleset toggles; ActiveDuel preserves the challenger as team one for normal challenges; concludeDuel receives the online winner before healAfterDuel.
+  - PlayerStatsStore already owns atomic stats.yml persistence and is the stable provider file consumed read-only by EnthusiaTags.
+  - Current repository has participant wagers but no spectator-betting subsystem; WarzoneDuels REQ-012 keeps guild integration outside the core.
+  Validation: focused advancement evidence tests pass 6/6; full Java 25 / Paper 26.2 Maven verify passes 76 tests with zero failures/errors/skips and packages target/WarzoneDuels-1.0.3.jar.

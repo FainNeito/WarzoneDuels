@@ -2,12 +2,15 @@ package dev.minecraft.warzoneduels.app;
 
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.PlayerStatsStore;
 import dev.minecraft.warzoneduels.domain.ActiveDuel;
+import dev.minecraft.warzoneduels.domain.DuelAdvancementPolicy;
 import dev.minecraft.warzoneduels.domain.DuelEndReason;
+import dev.minecraft.warzoneduels.domain.DuelMatchType;
 import dev.minecraft.warzoneduels.domain.MatchParticipant;
 import dev.minecraft.warzoneduels.domain.TeamOutcomePolicy;
 import dev.minecraft.warzoneduels.domain.stats.PlayerDuelStats;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -46,20 +49,52 @@ public final class StatsService {
             save();
             return;
         }
-        if (winnerId == null) {
+        if (winnerId == null || !duel.contains(winnerId)) {
             return;
         }
 
-        if (!duel.contains(winnerId)) {
-            return;
-        }
         TeamOutcomePolicy.Outcome outcome = TeamOutcomePolicy.outcome(duel, winnerId);
+        boolean restrictedMobility = DuelAdvancementPolicy.isRestrictedMobilityWin(duel.settings(), reason);
         for (MatchParticipant winner : outcome.winners()) {
-            stats(winner.playerId(), winner.name()).recordWin();
+            PlayerDuelStats winnerStats = stats(winner.playerId(), winner.name());
+            winnerStats.recordWin();
+            if (restrictedMobility) {
+                winnerStats.recordRestrictedMobilityWin();
+            }
         }
         for (MatchParticipant loser : outcome.losers()) {
             stats(loser.playerId(), loser.name()).recordLoss(reason == DuelEndReason.DISCONNECT_TIMEOUT);
         }
+
+        MatchParticipant challenger = duel.participantOne();
+        if (DuelAdvancementPolicy.isCustomRulesChallengerWin(
+            duel.matchType(), challenger.playerId(), winnerId, duel.settings(), reason
+        )) {
+            stats(challenger.playerId(), challenger.name()).recordCustomRulesWin();
+        }
+
+        if (duel.matchType() == DuelMatchType.NORMAL && reason == DuelEndReason.KILL) {
+            Player onlineWinner = Bukkit.getPlayer(winnerId);
+            if (onlineWinner != null
+                && DuelAdvancementPolicy.isLowHealthWin(duel.matchType(), reason, onlineWinner.getHealth())) {
+                stats(winnerId, onlineWinner.getName()).recordLowHealthWin();
+            }
+        }
+        save();
+    }
+
+    public void recordChallengeSent(UUID playerId, String name) {
+        stats(playerId, name).recordChallengeSent();
+        save();
+    }
+
+    public void recordSpoilsClaim(UUID playerId, String name) {
+        stats(playerId, name).recordSpoilsClaim();
+        save();
+    }
+
+    public void recordMutualDraw(UUID playerId, String name) {
+        stats(playerId, name).recordMutualDraw();
         save();
     }
 
