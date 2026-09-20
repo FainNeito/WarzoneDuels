@@ -247,3 +247,12 @@ The repository began SPEAR adoption with 14 passing tests. Initial team, party, 
   - Existing local phase helpers and phase skill procedures; no gameplay or domain changes.
   - Actual clean verification logs from this PR-cleanup pass will be recorded separately from earlier acceptance builds.
   Validation: PR-cleanup clean verify passed 76 Java tests; the separate Node tooling run passed 6 tests; EARS passed. This is later than the historical 70-Java/6-Node baseline, not a relabeling of that baseline. Current local artifact is WarzoneDuels-1.0.3.jar. No gameplay files changed.
+
+- [x] **INFRA-003** - Exercise the pinned 26.3 profile before stable artifact verification in hosted CI.
+  Tag: INFRA
+  References: REQ-014, REQ-018; docs/implementation.md#platform-compatibility
+  Acceptance: Both pinned Paper profiles run clean verification on the exact head; preserve separate test reports; the uploaded JAR is produced only by the final stable 26.2 build.
+  Evidence:
+  - Existing pom.xml pins stable 26.2.build.123-stable and compatibility profile paper-26.3 at 26.3.build.8-alpha.
+  - Existing immutable GitHub Actions checkout, setup-java and artifact actions in .github/workflows/verify.yml; no gameplay sources or server configuration changes.
+  Validation: round2-warzone-tooling.log passed six Node tests and EARS passed. round2-warzone-26.3-verify.log and round2-warzone-26.2-verify.log each passed 76 Java tests with zero failures/errors/skips. The pinned 26.3 compatibility run ran first; stable 26.2 clean verification ran last, producing the final 1.0.3 artifact. Hosted CI now preserves both report sets separately. No gameplay or deployment changes.

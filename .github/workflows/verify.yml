@@ -31,10 +31,22 @@ jobs:
         run: |
           node tools/spear/ears.mjs docs/requirements.md
           node --test tools/spear/*.test.mjs
-      - name: Clean build and verification
+      - name: Paper 26.3 compatibility verification
+        id: compatibility
+        run: mvn -B -ntp -Ppaper-26.3 clean verify
+      - name: Preserve Paper 26.3 test reports
+        if: always() && steps.compatibility.outcome != 'skipped'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: WarzoneDuels-paper-26.3-reports-${{ github.event.pull_request.head.sha || github.sha }}
+          path: target/surefire-reports/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Stable Paper 26.2 artifact verification
+        id: stable
         run: mvn -B -ntp clean verify
-      - name: Upload test reports
-        if: always()
+      - name: Upload stable Paper 26.2 test reports
+        if: always() && steps.stable.outcome != 'skipped'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: WarzoneDuels-test-reports-${{ github.event.pull_request.head.sha || github.sha }}
