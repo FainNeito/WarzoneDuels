@@ -27,6 +27,8 @@ import dev.minecraft.warzoneduels.app.ArenaMapService;
 import dev.minecraft.warzoneduels.app.ArenaTerrainService;
 import dev.minecraft.warzoneduels.app.DuelAnalyticsService;
 import dev.minecraft.warzoneduels.app.DuelService;
+import dev.minecraft.warzoneduels.app.DuelPartyService;
+import dev.minecraft.warzoneduels.app.DuelChallengeService;
 import dev.minecraft.warzoneduels.app.SpoilsService;
 import dev.minecraft.warzoneduels.app.StatsService;
 import dev.minecraft.warzoneduels.port.EconomyPort;
@@ -40,6 +42,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class WarzoneDuelsPlugin extends JavaPlugin {
     private DuelService activeDuelService;
+    private DuelPartyService activePartyService;
+    private DuelChallengeService activeChallengeService;
     private SpoilsService activeSpoilsService;
     private ArenaTerrainService activeArenaTerrainService;
     private CombatTagPort combatTagPort;
@@ -73,6 +77,20 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
         analyticsService.enable();
         this.headCache = new PlayerHeadCache(this);
         headCache.load();
+        long partyInviteLifetimeMillis = Math.max(
+            5L,
+            getConfig().getLong("settings.party-invite-expire-seconds", 60L)
+        ) * 1000L;
+        this.activePartyService = new DuelPartyService(partyInviteLifetimeMillis, java.util.UUID::randomUUID);
+        long partyChallengeLifetimeMillis = Math.max(
+            10L,
+            getConfig().getLong("settings.party-challenge-expire-seconds", 60L)
+        ) * 1000L;
+        this.activeChallengeService = new DuelChallengeService(
+            activePartyService,
+            partyChallengeLifetimeMillis,
+            java.util.UUID::randomUUID
+        );
 
         this.activeDuelService = new DuelService(
             this,
@@ -87,7 +105,9 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
             analyticsService,
             arenaMapService,
             activeArenaTerrainService,
-            new NoOpCombatTagPort()
+            new NoOpCombatTagPort(),
+            activePartyService,
+            activeChallengeService
         );
         this.combatTagPort = new CombatLogXCombatTagPort(this, activeDuelService);
         activeDuelService.setCombatTagPort(combatTagPort);
@@ -113,13 +133,13 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
 
         PluginCommand duelCommand = getCommand("duel");
         if (duelCommand != null) {
-            DuelCommand command = new DuelCommand(activeDuelService, activeSpoilsService);
+            DuelCommand command = new DuelCommand(activeDuelService, activeSpoilsService, activePartyService);
             duelCommand.setExecutor(command);
             duelCommand.setTabCompleter(command);
         }
         PluginCommand surrenderCommand = getCommand("surrender");
         if (surrenderCommand != null) {
-            DuelCommand command = new DuelCommand(activeDuelService, activeSpoilsService);
+            DuelCommand command = new DuelCommand(activeDuelService, activeSpoilsService, activePartyService);
             surrenderCommand.setExecutor(command);
             surrenderCommand.setTabCompleter(command);
         }
@@ -168,6 +188,10 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
 
     public SpoilsService spoilsService() {
         return activeSpoilsService;
+    }
+
+    public StatsService statsService() {
+        return statsService;
     }
 
     public ArenaTerrainService arenaTerrainService() {

@@ -4,7 +4,7 @@ This file documents the current player-facing Death Duel system on Enthusia SMP.
 
 ## What a Death Duel is
 
-WarzoneDuels runs consensual 1v1 fights in Enthusia's dedicated duel arena. A challenger chooses the rules before sending the request, and the challenged player gets a full review screen before accepting.
+WarzoneDuels runs consensual 1v1, 2v2, and 3v3 fights in Enthusia's dedicated duel arena. A challenger chooses the rules before sending the request, and every challenged participant gets a full review screen before accepting.
 
 These are **not keep-inventory duels**. The loser risks the items they bring into the fight, and an optional wager can put additional currency at stake.
 
@@ -40,6 +40,26 @@ The recipient can use:
 ```
 
 Accepting opens/requires the request review rather than silently starting a fight with rules the recipient never saw.
+
+## Duel Parties
+
+A Duel Party is a temporary competitive roster of up to three players:
+
+```text
+/duel party create
+/duel party invite <player>
+/duel party accept <leader>
+/duel party decline <leader>
+/duel party info
+/duel party leave
+/duel party kick <player>
+/duel party transfer <player>
+/duel party disband
+```
+
+To start a team match, both party leaders must be online with equally sized rosters. One leader runs `/duel <other-leader>` and builds the rules as usual. Every player on both snapshotted rosters must then use `/duel accept`, review the contract, and confirm it. Rosters remain locked until the challenge starts, is declined, expires, or is cancelled by a logout/start failure.
+
+Team matches disable friendly fire and end only when every member of one team has been eliminated. A death or disconnect timeout removes that player while surviving teammates continue. A draw requires every surviving participant to request it. Party wagers are currently disabled while a fair team stake/payout policy is deferred.
 
 ## Duel setup flow
 
@@ -142,6 +162,10 @@ Before the duel begins, both players are moved into the prepared arena and norma
 
 The current code defaults to a **5-second start countdown** because production does not override that setting. During the countdown, movement, building, and combat are restricted until the fight releases.
 
+### Optional duration limit
+
+The global `settings.duel-time-limit-seconds` option controls whether an unfinished duel has a time limit. It defaults to `0`, meaning unlimited: normal duels continue until death, disconnect forfeit, or a mutually accepted draw. If the server configures a positive number, timing begins when combat is released after the opening countdown; expiry ends the match as a draw and refunds any held wager.
+
 ## During the duel
 
 The duel is tightly isolated from normal server activity:
@@ -181,6 +205,10 @@ The winner can open it with:
 /claimspoils
 /duelvault
 ```
+
+In party matches, direct and explosive damage is attributed to a participant. A defeated player's spoils prefer the valid opposing player credited with the damage; if that player is not an eligible recipient, the plugin selects a surviving opponent deterministically. Teammates never receive each other's spoils.
+
+If the final members of both teams die during the same server tick, the match is a draw. No spoils are awarded for those simultaneous deaths, and their archived pre-duel loadouts are restored after respawn, including after a restart while restoration is pending.
 
 The vault can claim individual items or all items that fit. If an item will not fit in the winner's inventory, it remains in the vault rather than being deleted.
 
@@ -301,6 +329,8 @@ The default map is also configured to restore when the server starts without a d
 
 | Rule | Enthusia SMP |
 | --- | --- |
+| Supported server baseline | Paper 26.2; Paper 26.3 compatibility tested |
+| Required Java | Java 25 |
 | Active duels at once | 1 |
 | Request lifetime | 120 seconds |
 | Disconnect grace | 30 seconds |
@@ -309,6 +339,7 @@ The default map is also configured to restore when the server starts without a d
 | Wagers | Enabled |
 | Spoils lifetime | 24 hours |
 | Start countdown | 5 seconds (code default) |
+| Duel duration limit | Unlimited (`0`) |
 | Kill victory moment | 6 seconds (code default) |
 | Default map | Flat Arena |
 | Flat Arena original terrain breaking | Disabled |
@@ -322,6 +353,7 @@ Depending on assigned permissions:
 
 ```text
 /duel <player>
+/duel party <create|invite|accept|decline|info|leave|kick|transfer|disband>
 /duel review
 /duel accept
 /duel deny

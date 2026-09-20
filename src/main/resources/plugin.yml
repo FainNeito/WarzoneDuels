@@ -1,12 +1,12 @@
 name: WarzoneDuels
 main: dev.minecraft.warzoneduels.WarzoneDuelsPlugin
-version: 1.0.1
-api-version: "1.21"
+version: 1.0.3
+api-version: "26.2"
 softdepend: [Vault, EnthusiaTeleport, EnthusiaTags, NotBounties, CombatLogX, Plan]
 commands:
   duel:
     description: Death Duel commands and setup tools.
-    usage: /duel <player|accept|deny|review|watch|leave|draw|vault|stats|info|settings>
+    usage: /duel <player|party|accept|deny|review|watch|leave|draw|vault|stats|info|settings>
   surrender:
     description: Request a duel draw or cancel a queued duel.
     usage: /surrender
@@ -33,6 +33,7 @@ permissions:
       warzoneduels.command.stats: true
       warzoneduels.command.stats.others: true
       warzoneduels.command.info: true
+      warzoneduels.command.party: true
   warzoneduels.command.duel:
     description: Allows use of the /duel help and command router.
     default: false
@@ -62,6 +63,9 @@ permissions:
     default: false
   warzoneduels.command.info:
     description: Allows viewing active duel information and settings.
+    default: false
+  warzoneduels.command.party:
+    description: Allows creating and managing a temporary Duel Party.
     default: false
   warzoneduels.spectate:
     description: Grants all controlled pseudo-spectator permissions.

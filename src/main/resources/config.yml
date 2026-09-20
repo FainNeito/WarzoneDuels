@@ -60,6 +60,7 @@ messages:
   combat-item-blocked: "&cThat item is disabled for this duel."
   disconnect-grace: "&e{player} disconnected. They have &6{seconds}s &eto rejoin before they lose."
   disconnect-loss: "&c{player} failed to rejoin in time and forfeited the duel."
+  player-eliminated: "&e{player} was eliminated. The team duel continues."
   duel-countdown: "&eDuel begins in &6{seconds}&e..."
   duel-released: "&aFight!"
   rejoined-duel: "&aYou rejoined your duel. You were returned to your arena spawn."
@@ -83,6 +84,12 @@ arena:
   spawn1: "-140.5,172,-299.5"
   spawn2: "-140.5,172,-339.5"
 
+  # Additional party-member positions. If omitted, deterministic +/-2 X offsets from spawn1/spawn2 are used.
+  team1-spawn2: "-138.5,172,-299.5"
+  team1-spawn3: "-142.5,172,-299.5"
+  team2-spawn2: "-138.5,172,-339.5"
+  team2-spawn3: "-142.5,172,-339.5"
+
   # Center point for the controlled pseudo-spectator boundary.
   spectator: "-140,182,-319"
 
@@ -94,8 +101,14 @@ settings:
   # Pending duel request lifetime in seconds.
   request-expire-seconds: 120
 
+  # Pending Duel Party invitation lifetime in seconds.
+  party-invite-expire-seconds: 60
+  party-challenge-expire-seconds: 60
+
   # Seconds players are frozen after teleport before the fight starts.
   start-countdown-seconds: 5
+  # 0 keeps death duels unlimited. Positive values end unfinished duels as a draw after combat is released.
+  duel-time-limit-seconds: 0
 
   # Seconds the winner remains in the arena after a kill before being sent to spawn.
   victory-moment-seconds: 6
