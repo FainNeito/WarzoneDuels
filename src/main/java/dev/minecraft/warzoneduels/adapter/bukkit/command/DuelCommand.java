@@ -52,6 +52,10 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!isDrawCommandAlias(command) && args.length > 0 && "mode".equalsIgnoreCase(args[0])) {
+            handleModeCommand(sender, args);
+            return true;
+        }
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Players only.");
             return true;
@@ -121,6 +125,18 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
             return List.of();
         }
         List<String> result = new ArrayList<>();
+        if (sender.hasPermission(PermissionPolicy.ADMIN_MODES)) {
+            if (!(sender instanceof Player) && args.length == 1 && "mode".startsWith(args[0].toLowerCase(Locale.ROOT))) {
+                result.add("mode");
+            } else if (args.length == 2 && "mode".equalsIgnoreCase(args[0])) {
+                addMatchingOptions(result, List.of("2v2", "3v3"), args[1].toLowerCase(Locale.ROOT));
+                return result;
+            } else if (args.length == 3 && "mode".equalsIgnoreCase(args[0])
+                && ("2v2".equalsIgnoreCase(args[1]) || "3v3".equalsIgnoreCase(args[1]))) {
+                addMatchingOptions(result, List.of("enable", "disable", "status"), args[2].toLowerCase(Locale.ROOT));
+                return result;
+            }
+        }
         if (args.length == ROOT_ARGUMENT_COUNT) {
             addRootCompletions(sender, result, args[0].toLowerCase(Locale.ROOT));
             return result;
@@ -147,6 +163,42 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
         if (sender.hasPermission(PermissionPolicy.CHALLENGE)) {
             addOnlinePlayerCompletions(sender, result, typed);
         }
+    }
+
+    private void handleModeCommand(CommandSender sender, String[] args) {
+        if (!sender.hasPermission(PermissionPolicy.ADMIN_MODES)) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission.");
+            return;
+        }
+        if (args.length == 1) {
+            sendModeStatus(sender, 2);
+            sendModeStatus(sender, 3);
+            return;
+        }
+        int teamSize = switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "2v2" -> 2;
+            case "3v3" -> 3;
+            default -> 0;
+        };
+        String action = args.length == 2 ? "status" : args[2].toLowerCase(Locale.ROOT);
+        if (teamSize == 0 || args.length > 3 || !List.of("enable", "disable", "status").contains(action)) {
+            sender.sendMessage(ChatColor.YELLOW + "Usage: /duel mode <2v2|3v3> <enable|disable|status>");
+            return;
+        }
+        if (!"status".equals(action)) {
+            try {
+                duelService.setDuelModeEnabled(teamSize, "enable".equals(action));
+            } catch (java.io.IOException ex) {
+                sender.sendMessage(ChatColor.RED + "Could not save duel modes. The previous setting was retained.");
+                return;
+            }
+        }
+        sendModeStatus(sender, teamSize);
+    }
+
+    private void sendModeStatus(CommandSender sender, int teamSize) {
+        sender.sendMessage(ChatColor.YELLOW + "Duel mode " + teamSize + "v" + teamSize + ": "
+            + (duelService.isDuelModeEnabled(teamSize) ? ChatColor.GREEN + "enabled" : ChatColor.RED + "disabled"));
     }
 
     private void addVisibleCommandSuggestions(CommandSender sender, List<String> result, String typed) {

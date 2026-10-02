@@ -543,6 +543,10 @@ public final class DuelService {
             sendMessageRaw(requester, prefix + ChatColor.RED + "Only both Duel Party leaders can create this challenge.");
             return;
         }
+        if (!isDuelModeEnabled(requesterParty.get().size())) {
+            sendMessageRaw(requester, ChatColor.RED + disabledModeMessage(requesterParty.get().size()));
+            return;
+        }
         if (settings.getWager() > NO_WAGER) {
             sendMessageRaw(requester, prefix + ChatColor.RED + "Party duel wagers are not supported yet.");
             return;
@@ -690,6 +694,15 @@ public final class DuelService {
     }
 
     private void confirmPartyChallenge(Player participant, DuelChallenge challenge) {
+        int teamSize = challenge.challengerTeam().size();
+        if (!isDuelModeEnabled(teamSize)) {
+            challengeService.challengeForParticipant(participant.getUniqueId(), System.currentTimeMillis())
+                .ifPresent(current -> challengeService.complete(current.id()));
+            cancelRequestExpiryTask();
+            sendMessageRaw(participant, ChatColor.RED + disabledModeMessage(teamSize)
+                + " The challenge was cancelled and both rosters unlocked.");
+            return;
+        }
         DuelChallengeStatus status;
         try {
             status = challengeService.accept(participant.getUniqueId(), System.currentTimeMillis());
@@ -1950,9 +1963,42 @@ public final class DuelService {
         startDuel(firstTeam, secondTeam, List.of(requester, target), settings);
     }
 
+    public boolean isDuelModeEnabled(int teamSize) {
+        return switch (teamSize) {
+            case 1 -> true;
+            case 2, 3 -> plugin.getConfig().getBoolean(modeConfigPath(teamSize), true);
+            default -> false;
+        };
+    }
+
+    public void setDuelModeEnabled(int teamSize, boolean enabled) throws java.io.IOException {
+        String path = modeConfigPath(teamSize);
+        FileConfiguration config = plugin.getConfig();
+        Object previous = config.get(path);
+        config.set(path, enabled);
+        try {
+            config.save(new java.io.File(plugin.getDataFolder(), "config.yml"));
+        } catch (java.io.IOException ex) {
+            config.set(path, previous);
+            throw ex;
+        }
+    }
+
+    private String modeConfigPath(int teamSize) {
+        if (teamSize != 2 && teamSize != 3) {
+            throw new IllegalArgumentException("Only 2v2 and 3v3 can be toggled.");
+        }
+        return "settings.duel-modes." + teamSize + "v" + teamSize + "-enabled";
+    }
+
+    private String disabledModeMessage(int teamSize) {
+        return teamSize + "v" + teamSize + " duels are disabled by an administrator.";
+    }
+
     public boolean startPartyDuel(DuelChallenge challenge) {
         requirePrimaryThread();
         if (challenge == null || challenge.status(System.currentTimeMillis()) != DuelChallengeStatus.READY
+            || !isDuelModeEnabled(challenge.challengerTeam().size())
             || activeDuel != null || preparingDuel != null || queuedDuelStart != null || arenaTerrainService.isBusy()) {
             return false;
         }
@@ -1969,6 +2015,10 @@ public final class DuelService {
     }
 
     private boolean startDuel(MatchTeam firstTeam, MatchTeam secondTeam, List<Player> participants, DuelSettings settings) {
+        if (!isDuelModeEnabled(firstTeam.size())) {
+            sendRaw(participants, prefix + ChatColor.RED + disabledModeMessage(firstTeam.size()));
+            return false;
+        }
         if (!arenaTerrainService.isReady()) {
             sendRaw(participants, prefix + ChatColor.RED + "Arena terrain footprint is not loaded.");
             return false;

@@ -1,5 +1,13 @@
 # WarzoneDuels Manual Test Plan
 
+## Admin mode controls (1.0.4)
+
+- As an operator and from the console, use `/duel mode`, `/duel mode 2v2 disable`, and `/duel mode 3v3 disable`; confirm ordinary players cannot use the control and tab completion respects permissions.
+- Check disabled modes reject new party challenges, while 1v1 and party membership continue to work. Re-enable only one mode and verify it works independently.
+- Send a party challenge, disable its mode before the final acceptance, and confirm accepting cancels it and releases both rosters. Re-enable and send a fresh challenge.
+- Disable a mode while its match is preparing or fighting; confirm that match finishes normally and new challenges remain blocked.
+- Confirm saved values survive `/duel reload` and restart. Edit each config toggle manually and reload to verify enforcement.
+
 Run these checks on a non-production Leaf/Fuji server with disposable player data first. Keep a copy of the world, `plugins/WarzoneDuels`, and each test player's data file before crash tests.
 
 ## Platform matrix

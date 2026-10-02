@@ -1,5 +1,11 @@
 # WarzoneDuels — SMP Player Guide
 
+## Admin duel mode controls (1.0.4)
+
+Admins can use `/duel mode` to view both modes, or `/duel mode <2v2|3v3> <enable|disable|status>` to manage one. These commands work from the server console and require `warzoneduels.admin.modes`, included in `warzoneduels.admin` (operators by default).
+
+Both modes default to enabled. Changes save immediately to `settings.duel-modes.2v2-enabled` and `settings.duel-modes.3v3-enabled` in config.yml and survive reload/restart. If editing the file manually, run `/duel reload`. Disabling a mode blocks new challenges; a pending challenge is cancelled and both rosters unlocked when a participant next accepts while the mode is disabled. Matches already preparing or fighting continue. Party membership and 1v1 remain available.
+
 This file documents the current player-facing Death Duel system on Enthusia SMP. The values below were checked against the live production configuration and current source on August 22, 2026.
 
 ## What a Death Duel is

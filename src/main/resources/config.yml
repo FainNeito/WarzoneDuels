@@ -98,6 +98,12 @@ arena:
   exit: "0,80,0"
 
 settings:
+  # Independent switches for new party duels. 1v1 is always available.
+  # /duel mode <2v2|3v3> <enable|disable> saves changes immediately.
+  duel-modes:
+    2v2-enabled: true
+    3v3-enabled: true
+
   # Pending duel request lifetime in seconds.
   request-expire-seconds: 120
 
