@@ -27,6 +27,12 @@ The application layer owns registries, invitation expiry, player-to-party indexe
 
 ## Persistence and recovery
 
+DuelCooldownPolicy stores per-player completion timestamps and unordered opposing-player UUID pairs. DuelCooldownService depends only on the framework-free policy and DuelCooldownStore port; the Bukkit YAML adapter is wired by WarzoneDuelsPlugin. The separate schema-1 `duel-cooldowns.yml` is read strictly and atomically replaced before match/challenge evidence is recorded. Malformed or inaccessible history blocks new duels instead of silently resetting protection. Stats and existing advancement totals are not reset.
+
+`settings.duel-cooldown-seconds` defaults to 300; `settings.repeat-opponent-cooldown-seconds` defaults to 86400. Zero disables each independently; negative values clamp to disabled. Repeat-opponent protection blocks the rematch itself, because the advancement consumer reads ordinary win/streak totals, not an independent credited-wins stream. All cross-team pairs are considered, including non-leaders and eliminated members; teammate relationships are not considered rematches. Successful challenge-sent evidence has its own pair window so expired/declined requests cannot repeatedly award credit, without consuming the completed-duel cooldown. History survives configuration reload, relog, party recreation and plugin/server restart. Administrative aborts and restart interruptions do not count as completed duels; kills, draws and disconnect forfeits do.
+
+Protection is checked before sending/accepting and at final/queued start and arena-preparation completion. Normal completion is synchronously persisted before statistics/mutual-draw evidence is emitted; an I/O failure withholds those counters, preserves normal cleanup/loot/analytics, and blocks new matchmaking. A storage fault requires an administrator to repair the retained file/permissions and re-enable the plugin; configuration reload alone intentionally does not reset the fault. Existing earned advancements are not revoked, and this is cooldown-based anti-farming rather than proof against collusion among many different accounts.
+
 Existing one-versus-one runtime files remain readable alongside version-2 full-team snapshots. Failure to load a team match must retain recovery data and must never synthesize a winner. Analytics writes commit the parent and participant rows together. Failed writes roll back together; a caller-owned transaction uses a savepoint without committing the caller's unrelated changes.
 
 ## Match execution

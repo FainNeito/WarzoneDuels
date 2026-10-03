@@ -1,6 +1,6 @@
 name: WarzoneDuels
 main: dev.minecraft.warzoneduels.WarzoneDuelsPlugin
-version: 1.0.4
+version: 1.0.5
 api-version: "26.2"
 softdepend: [Vault, EnthusiaTeleport, EnthusiaTags, NotBounties, CombatLogX, Plan]
 commands:

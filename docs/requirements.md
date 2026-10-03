@@ -117,3 +117,17 @@ WHEN a one-versus-one challenger wins with a non-default ruleset THE SYSTEM SHAL
 ### REQ-028 - Advancement integration boundary
 
 THE SYSTEM SHALL expose only durable WarzoneDuels evidence needed by the advancement consumer and SHALL NOT implement guild-war achievements, spectator-betting achievements, or reward payouts as part of this slice.
+
+### REQ-029 - Persistent duel cooldowns and repeat-opponent prevention
+
+WHEN a duel concludes normally THE SYSTEM SHALL persist the completion time of every participant and every cross-team UUID pair before recording advancement-bearing match statistics.
+
+WHILE any participant has a remaining duel cooldown or any cross-team pair has a remaining repeat-opponent cooldown THE SYSTEM SHALL reject challenges, acceptance, and queued or immediate match starts with the affected players and remaining wait.
+
+THE SYSTEM SHALL default settings.duel-cooldown-seconds to 300 and settings.repeat-opponent-cooldown-seconds to 86400, allow either setting to be disabled independently with zero, and apply configuration reloads without clearing history or interrupting active duels.
+
+IF cooldown history cannot be read or written safely THEN THE SYSTEM SHALL refuse new duels and withhold new match-result and challenge-sent advancement evidence rather than reset protection.
+
+WHEN a valid challenge is sent THE SYSTEM SHALL credit challenge-sent advancement evidence at most once per unordered cross-team UUID pair within the configured repeat-opponent window, including challenges that expire or are declined.
+
+THE SYSTEM SHALL preserve existing statistics and earned advancements, exclude cancelled requests and interrupted server-shutdown matches from completed-duel cooldowns, and prevent relogging, party recreation, leader changes, or swapped challenger roles from clearing recent history.

@@ -106,6 +106,7 @@ public final class DuelService {
     private final ArenaTerrainService arenaTerrainService;
     private final DuelPartyService partyService;
     private final DuelChallengeService challengeService;
+    private final DuelCooldownService cooldownService;
     private CombatTagPort combatTagPort;
 
     private final Map<UUID, BuilderSession> builders = new ConcurrentHashMap<>();
@@ -183,7 +184,8 @@ public final class DuelService {
         ArenaTerrainService arenaTerrainService,
         CombatTagPort combatTagPort,
         DuelPartyService partyService,
-        DuelChallengeService challengeService
+        DuelChallengeService challengeService,
+        DuelCooldownService cooldownService
     ) {
         this.plugin = plugin;
         this.economyPort = economyPort;
@@ -205,6 +207,7 @@ public final class DuelService {
         this.arenaTerrainService = arenaTerrainService;
         this.partyService = partyService;
         this.challengeService = challengeService;
+        this.cooldownService = java.util.Objects.requireNonNull(cooldownService, "cooldownService");
         this.combatTagPort = combatTagPort;
     }
 
@@ -215,6 +218,7 @@ public final class DuelService {
     public void enable() {
         loadoutArchiveStore.enable();
         reloadConfig();
+        cooldownService.enable();
         recoveryTeleportIds.clear();
         recoveryTeleportIds.addAll(runtimeStateStore.loadRecoveryTeleportIds());
         restoreLoadoutAfterRespawn.clear();
@@ -289,6 +293,8 @@ public final class DuelService {
         clearPlacedBlocksWhenNoBreak = config.getBoolean("settings.clear-placed-blocks-when-no-break", true);
         startCountdownSeconds = Math.max(0, config.getInt("settings.start-countdown-seconds", 5));
         duelTimeLimitSeconds = Math.max(0, config.getInt("settings.duel-time-limit-seconds", 0));
+        cooldownService.configure(config.getLong("settings.duel-cooldown-seconds", 300),
+            config.getLong("settings.repeat-opponent-cooldown-seconds", 86400));
         victoryMomentSeconds = Math.max(0, config.getInt("settings.victory-moment-seconds", 6));
         victoryFireworks = config.getBoolean("settings.victory-fireworks", true);
         matchmakingWorld = config.getString("matchmaking-spawn.world", config.getString("arena.world", "world"));
@@ -520,7 +526,9 @@ public final class DuelService {
             settings,
             System.currentTimeMillis()
         );
-        statsService.recordChallengeSent(requester.getUniqueId(), requester.getName());
+        if (cooldownService.creditChallenge(List.of(requester.getUniqueId()), List.of(target.getUniqueId()))) {
+            statsService.recordChallengeSent(requester.getUniqueId(), requester.getName());
+        }
         builders.remove(requester.getUniqueId());
         sendMessage(requester, "messages.request-sent", PLAYER_PLACEHOLDER, target.getName());
         sendRequestDetails(target, pendingRequest);
@@ -565,7 +573,9 @@ public final class DuelService {
             challengeService.cancel(requester.getUniqueId(), System.currentTimeMillis());
             return;
         }
-        statsService.recordChallengeSent(requester.getUniqueId(), requester.getName());
+        if (cooldownService.creditChallenge(rosterIds(challenge.challengerTeam()), rosterIds(challenge.opponentTeam()))) {
+            statsService.recordChallengeSent(requester.getUniqueId(), requester.getName());
+        }
         builders.remove(requester.getUniqueId());
         String contract = prefix + ChatColor.GOLD + teamLabel(challenge.challengerTeam()) + ChatColor.YELLOW + " vs "
             + ChatColor.GOLD + teamLabel(challenge.opponentTeam()) + ChatColor.YELLOW + ": use /duel accept to review and confirm.";
@@ -584,6 +594,9 @@ public final class DuelService {
     }
 
     private boolean rejectPartyRoster(DuelChallenge challenge, Player requester) {
+        if (rejectCooldown(challenge.challengerTeam(), challenge.opponentTeam(), List.of(requester))) {
+            return true;
+        }
         List<Player> participants = onlinePartyParticipants(challenge);
         if (participants == null) {
             sendMessage(requester, MSG_TARGET_OFFLINE);
@@ -607,6 +620,9 @@ public final class DuelService {
     }
 
     private boolean rejectRequestPlayers(Player requester, Player target) {
+        if (rejectCooldown(requester, target)) {
+            return true;
+        }
         if (isCombatTagged(requester)) {
             sendMessage(requester, MSG_PLAYER_IN_COMBAT);
             return true;
@@ -703,6 +719,11 @@ public final class DuelService {
                 + " The challenge was cancelled and both rosters unlocked.");
             return;
         }
+        if (rejectCooldown(challenge.challengerTeam(), challenge.opponentTeam(), List.of(participant))) {
+            challengeService.cancel(participant.getUniqueId(), System.currentTimeMillis());
+            cancelRequestExpiryTask();
+            return;
+        }
         DuelChallengeStatus status;
         try {
             status = challengeService.accept(participant.getUniqueId(), System.currentTimeMillis());
@@ -744,6 +765,10 @@ public final class DuelService {
     }
 
     private boolean rejectAcceptedRequest(Player requester, Player target, DuelSettings settings) {
+        if (rejectCooldown(requester, target, List.of(requester, target))) {
+            clearPendingRequest();
+            return true;
+        }
         return rejectAcceptedCombatState(requester, target)
             || rejectAcceptedLocation(requester, target)
             || rejectAcceptedWager(requester, target, settings);
@@ -873,11 +898,6 @@ public final class DuelService {
         participant.setDrawRequested(true);
         sendToParticipants("messages.draw-requested", PLAYER_PLACEHOLDER, player.getName());
         if (TeamMatchPolicy.allSurvivorsRequestedDraw(activeDuel, eliminatedParticipantIds)) {
-            for (MatchParticipant agreeingParticipant : activeDuel.participants()) {
-                if (!eliminatedParticipantIds.contains(agreeingParticipant.playerId())) {
-                    statsService.recordMutualDraw(agreeingParticipant.playerId(), agreeingParticipant.name());
-                }
-            }
             concludeDuel((Player) null, DuelEndReason.DRAW, true);
             return;
         }
@@ -2019,6 +2039,13 @@ public final class DuelService {
             sendRaw(participants, prefix + ChatColor.RED + disabledModeMessage(firstTeam.size()));
             return false;
         }
+        if (rejectCooldown(firstTeam, secondTeam, participants)) {
+            return false;
+        }
+        if (!cooldownService.ensureWritable()) {
+            rejectCooldown(firstTeam, secondTeam, participants);
+            return false;
+        }
         if (!arenaTerrainService.isReady()) {
             sendRaw(participants, prefix + ChatColor.RED + "Arena terrain footprint is not loaded.");
             return false;
@@ -2053,6 +2080,11 @@ public final class DuelService {
         sendRaw(participants, ChatColor.YELLOW + "Preparing arena terrain...");
         arenaTerrainService.loadSnapshot(selectedMap.id(), () -> {
             if (preparingDuel != stagedDuel) {
+                refundWagerIfHeld(stagedDuel);
+                return;
+            }
+            if (rejectCooldown(firstTeam, secondTeam, participants)) {
+                preparingDuel = null;
                 refundWagerIfHeld(stagedDuel);
                 return;
             }
@@ -2133,7 +2165,18 @@ public final class DuelService {
         }
 
         duelAnalyticsService.recordDuel(finishedDuel, winnerId, reason);
-        statsService.recordMatchResult(finishedDuel, winnerId, reason);
+        boolean normalResult = reason == DuelEndReason.KILL || reason == DuelEndReason.DRAW
+            || reason == DuelEndReason.DISCONNECT_TIMEOUT;
+        if (normalResult && cooldownService.recordCompletion(rosterIds(finishedDuel.teamOne()), rosterIds(finishedDuel.teamTwo()))) {
+            if (reason == DuelEndReason.DRAW && TeamMatchPolicy.allSurvivorsRequestedDraw(finishedDuel, eliminatedParticipantIds)) {
+                for (MatchParticipant participant : finishedDuel.participants()) {
+                    if (!eliminatedParticipantIds.contains(participant.playerId())) {
+                        statsService.recordMutualDraw(participant.playerId(), participant.name());
+                    }
+                }
+            }
+            statsService.recordMatchResult(finishedDuel, winnerId, reason);
+        }
         runtimeStateStore.clearRuntime();
 
         if (winnerId != null && finishedDuel.matchType() == DuelMatchType.PARTY) {
@@ -2171,6 +2214,41 @@ public final class DuelService {
         rebuildParticipantIndex();
         spectatorManager.restoreAllOnline("duel-ended");
         cleanupArenaAfterMatch(finishedDuel, true);
+    }
+
+    private List<UUID> rosterIds(MatchTeam team) {
+        return team.participants().stream().map(MatchParticipant::playerId).toList();
+    }
+
+    private boolean rejectCooldown(Player requester, Player target) {
+        return rejectCooldown(requester, target, List.of(requester));
+    }
+
+    private boolean rejectCooldown(Player requester, Player target, List<Player> recipients) {
+        return rejectCooldown(MatchTeam.singleton(new MatchParticipant(requester.getUniqueId(), requester.getName())),
+            MatchTeam.singleton(new MatchParticipant(target.getUniqueId(), target.getName())), recipients);
+    }
+
+    private boolean rejectCooldown(MatchTeam first, MatchTeam second, List<Player> recipients) {
+        if (cooldownService == null || !cooldownService.isHealthy()) {
+            sendRaw(recipients, prefix + color(plugin.getConfig().getString("messages.cooldown-unavailable",
+                "&cDuels are unavailable while cooldown history needs administrator attention.")));
+            return true;
+        }
+        var blocked = cooldownService.block(rosterIds(first), rosterIds(second));
+        if (blocked == null) return false;
+        Map<UUID, String> names = new java.util.HashMap<>();
+        first.participants().forEach(participant -> names.put(participant.playerId(), participant.name()));
+        second.participants().forEach(participant -> names.put(participant.playerId(), participant.name()));
+        String path = blocked.opponent() == null ? "messages.duel-cooldown" : "messages.repeat-opponent-cooldown";
+        String fallback = blocked.opponent() == null ? "&c{player} must wait {seconds}s before another duel."
+            : "&c{player} and {opponent} must wait {seconds}s before facing each other again.";
+        String message = plugin.getConfig().getString(path, fallback)
+            .replace("{player}", names.get(blocked.player()))
+            .replace("{opponent}", blocked.opponent() == null ? "" : names.get(blocked.opponent()))
+            .replace("{seconds}", Long.toString(blocked.remainingSeconds()));
+        sendRaw(recipients, prefix + color(message));
+        return true;
     }
 
     private void finishParticipantExit(UUID playerId) {

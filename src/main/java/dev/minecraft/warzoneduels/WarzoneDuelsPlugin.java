@@ -11,6 +11,8 @@ import dev.minecraft.warzoneduels.adapter.bukkit.persistence.ArenaMapSnapshotSto
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.DuelAnalyticsStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.LoadoutArchiveStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.PlayerStatsStore;
+import dev.minecraft.warzoneduels.adapter.bukkit.persistence.YamlDuelCooldownStore;
+import dev.minecraft.warzoneduels.app.DuelCooldownService;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.RuntimeStateStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.SpoilsStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.SpectatorSessionStore;
@@ -107,7 +109,9 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
             activeArenaTerrainService,
             new NoOpCombatTagPort(),
             activePartyService,
-            activeChallengeService
+            activeChallengeService,
+            new DuelCooldownService(new YamlDuelCooldownStore(getDataFolder().toPath().resolve("duel-cooldowns.yml")),
+                System::currentTimeMillis, message -> getLogger().warning(message))
         );
         this.combatTagPort = new CombatLogXCombatTagPort(this, activeDuelService);
         activeDuelService.setCombatTagPort(combatTagPort);

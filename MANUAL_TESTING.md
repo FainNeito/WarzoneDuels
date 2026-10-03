@@ -144,6 +144,21 @@ The additional arena spawn keys are `arena.team1-spawn2`, `arena.team1-spawn3`, 
 4. End a limited duel by death before expiry, then wait beyond the former deadline. Confirm no delayed second conclusion, broadcast, stat update, payout, or cleanup occurs.
 5. Reload the plugin during a limited duel. Confirm the persisted deadline resumes with its remaining time rather than granting a new full duration.
 
+## Duel anti-farming cooldowns (1.0.5)
+
+Use disposable accounts on staging. Temporarily set `settings.duel-cooldown-seconds: 10` and `settings.repeat-opponent-cooldown-seconds: 30`, then `/duel reload`. Revert to the intended values after testing.
+
+1. Finish a 1v1 kill, mutual draw and disconnect forfeit. Verify both players cannot start another duel for ten seconds, even against a different opponent. Check that the refusal identifies the player and remaining seconds.
+2. After ten seconds, face a new opponent successfully; attempting the original opponent must remain blocked until thirty seconds after the prior duel ended. Swap challenger/recipient to verify the same wait applies.
+3. Repeat in 2v2/3v3. Put former non-leaders on newly created teams with new leaders. Any cross-team player pair from the previous match must prevent the rematch; unrelated teammates are not opposing pairs.
+4. Relog and restart the staging server between attempts. Inspect `plugins/WarzoneDuels/duel-cooldowns.yml`; waits must persist. Do not delete this file as part of routine upgrades or reloads.
+5. Disable each setting independently with zero and reload. Confirm only the selected guard is disabled, previously recorded history survives re-enabling, and an already-active fight is unaffected. The separate duel-duration setting stays zero/unlimited.
+6. Send valid requests, then decline/expire and resend to the same player. In stats.yml, `advancements.challenges-sent` must increase only once during the repeat window, including after reversing leaders or restarting. The request itself remains allowed if no completed-duel cooldown is active.
+7. Increase the cooldown settings while a contract is pending or its arena is preparing. Acceptance/final start must recheck history and reject blocked participants; party cancellation must unlock both rosters. No entry teleport or wager payout should occur for a rejected start.
+8. On a disposable copy, corrupt the history YAML or make its path unwritable. New duels must refuse to start and logs must identify the fault. Existing history must not be erased. Restore a backed-up valid history/permissions and re-enable the plugin before continuing. Never perform this fault injection on production.
+9. Verify existing win/streak and special-condition advancements still advance on eligible matches with EnthusiaTags present. Existing earned advancements must remain; local Java/API tests do not replace this player-visible check.
+10. Verify cancelled requests, administrative aborts and server-shutdown interruptions do not create completed-duel cooldowns or fabricate match results. Existing stats, spoils and inventory restoration must remain intact.
+
 ## Safe deployment order
 
 1. Back up the plugin data directory, world, and player data.

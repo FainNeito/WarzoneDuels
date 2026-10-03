@@ -4,6 +4,9 @@
 # Duel watchers use a durable Adventure-mode pseudo-spectator session centered on the configured spectator spawn.
 
 messages:
+  duel-cooldown: "&c{player} must wait {seconds}s before another duel."
+  repeat-opponent-cooldown: "&c{player} and {opponent} must wait {seconds}s before facing each other again."
+  cooldown-unavailable: "&cDuels are unavailable while cooldown history needs administrator attention."
   prefix: "&6[Duel]&r "
   no-permission: "&cYou do not have permission."
   no-arena: "&cDuel arena is not configured."
@@ -98,6 +101,12 @@ arena:
   exit: "0,80,0"
 
 settings:
+  # Per-player wait after a finished duel; applies to every party member. 0 disables.
+  duel-cooldown-seconds: 300
+  # Wait before ANY opposing player pair can rematch, even with different party leaders.
+  # Also limits challenge-sent advancement credit for repeated/expired requests. 0 disables.
+  repeat-opponent-cooldown-seconds: 86400
+
   # Independent switches for new party duels. 1v1 is always available.
   # /duel mode <2v2|3v3> <enable|disable> saves changes immediately.
   duel-modes:

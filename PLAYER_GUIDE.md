@@ -346,6 +346,8 @@ The default map is also configured to restore when the server starts without a d
 | Spoils lifetime | 24 hours |
 | Start countdown | 5 seconds (code default) |
 | Duel duration limit | Unlimited (`0`) |
+| Between-duel cooldown | 5 minutes per participant |
+| Repeat-opponent cooldown | 24 hours per opposing player pair |
 | Kill victory moment | 6 seconds (code default) |
 | Default map | Flat Arena |
 | Flat Arena original terrain breaking | Disabled |
@@ -379,6 +381,12 @@ Depending on assigned permissions:
 ```
 
 Administrative arena setup, map snapshot, loadout recovery, watcher recovery, reload, and bypass commands are intentionally omitted from this player guide.
+
+## Anti-farming cooldowns (local 1.0.5 update; not deployed)
+
+After a completed duel, every participant must wait `settings.duel-cooldown-seconds` (default `300`) before another duel. The same opposing players must wait `settings.repeat-opponent-cooldown-seconds` (default `86400`) before a rematch. Both settings are seconds; `0` disables that limit independently. Change the config and use `/duel reload` as an administrator; active fights are unaffected.
+
+These limits apply to 1v1, 2v2 and 3v3, including non-leaders. A new party, a different leader, swapping challenger/recipient, relogging or restarting will not clear the wait. Repeated/expired challenge requests award challenge-sent advancement evidence only once per opposing pair during the repeat-opponent window. Challenges that never become matches do not start the completed-duel cooldown. Existing wins and earned advancements are retained.
 
 ## Items to verify before public wiki publication
 

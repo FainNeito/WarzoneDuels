@@ -1,5 +1,19 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-020** - Persist configurable duel and repeat-opponent cooldowns.
+  Tag: TDD
+  References: REQ-029; docs/implementation.md persistence-and-recovery and match-execution.
+  Acceptance: Defaults are 300/86400 seconds; zero disables independently. Every participant and unordered opposing UUID pair is enforced at send, acceptance and start. Normal completion is persisted before advancement statistics; declined/expired challenge evidence is pair-limited. Reload/relog/restart preserve history; unreadable or unwritable history fails closed. Existing stats remain intact.
+  Evidence:
+  - DuelService.sendRequest, rejectRequestPlayers, rejectPartyRoster, rejectAcceptedRequest, startDuel and concludeDuel are the inspected matchmaking/result boundaries; statsService.recordMatchResult follows normal conclusion, not shutdown interruption.
+  - Existing MatchTeam.participants, MatchParticipant.playerId, ActiveDuel.teamOne/teamTwo expose immutable complete rosters; org.junit.jupiter.api.Test, org.junit.jupiter.api.io.TempDir and org.bukkit.configuration.file.YamlConfiguration are existing test dependencies.
+  - EnthusiaTags WarzoneStatsReader reads wins/best-win-streak directly from stats.yml; rejecting repeat matches preserves its contract without another plugin deployment. Challenge-sent evidence currently records every valid request.
+  - PlayerStatsStore uses same-directory temporary files and java.nio.file.Files atomic move with fallback; new persistence uses strict YamlConfiguration.load rather than forgiving loadConfiguration so invalid history cannot silently reset protection.
+  - dev.minecraft.warzoneduels.domain.DuelCooldownPolicy implements the UUID/pair history and immutable snapshots tested by DuelCooldownPolicyTest; dev.minecraft.warzoneduels.port.DuelCooldownStore carries snapshots and IOException without Bukkit coupling.
+  - dev.minecraft.warzoneduels.app.DuelCooldownService coordinates the port, injected clock and failure reporting; dev.minecraft.warzoneduels.adapter.bukkit.persistence.YamlDuelCooldownStore uses org.bukkit.configuration.ConfigurationSection and org.bukkit.configuration.InvalidConfigurationException for strict schema/timestamp/UUID validation, tested with real temporary YAML files.
+  - Admission tests follow existing DuelModeControlsTest reflection/proxy fixtures using dev.minecraft.warzoneduels.WarzoneDuelsPlugin, org.bukkit.entity.Player, org.bukkit.plugin.java.JavaPlugin and sun.misc.Unsafe; no new third-party dependency is introduced.
+  Validation: duel-cooldown-red.log records two meaningful assertion failures (missing defaults and live guards), with no compilation/test errors. duel-cooldown-green.log passes 21 new cooldown tests plus 5 existing mode-control tests. Initial architecture scan incorrectly included JUnit test imports; restricting layer rules to production sources passed, as did import evidence and annotation gates. An initial unquoted PowerShell profile argument was corrected before compatibility verification. duel-cooldown-26.3-verify.log and duel-cooldown-26.2-verify.log each pass clean verify with 102 Java tests, zero failures/errors/skips; six separate Node tooling tests and EARS pass. Stable 26.2 build ran last. Packaged 1.0.5 JAR is 3,662,138 bytes, SHA-256 9A2513DBE3A296C750D3811E175E6030D3431ED1A341F845A22F853866B6A03E. MANUAL_TESTING.md records remaining live Paper/EnthusiaTags checks. No production mutation, push or PR is part of this task.
+
 - [x] **TDD-018** - Prevent implicit commits after a rollback failure.
   Tag: TDD
   References: REQ-022; `docs/implementation.md#persistence-and-recovery`
