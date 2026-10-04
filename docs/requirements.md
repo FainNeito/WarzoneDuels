@@ -1,5 +1,9 @@
 # WarzoneDuels requirements
 
+### REQ-032 - Truthful SPEAR history failure reporting
+
+IF SPEAR history append fails after a state replacement succeeds THEN THE SYSTEM SHALL report a history warning without reporting that the persisted transition failed or weakening phase gates.
+
 ### REQ-031 - Party same-IP admission
 
 WHEN party rosters are checked before admission THE SYSTEM SHALL enforce the configured same-IP restriction across every opposing participant pair while allowing shared teammate addresses and preserving the allow-same-IP opt-out and missing-address behavior.

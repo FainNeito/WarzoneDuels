@@ -30,7 +30,11 @@ function save(s) {
   } finally {
     fs.rmSync(temporary, {force:true});
   }
-  fs.appendFileSync(path.join(path.dirname(file),'spear-history.jsonl'),JSON.stringify(s)+'\n');
+  try {
+    fs.appendFileSync(path.join(path.dirname(file),'spear-history.jsonl'),JSON.stringify(s)+'\n');
+  } catch (error) {
+    console.error('SPEAR state saved, but history append failed: ' + error.message);
+  }
 }
 switch(fn) {
 case 'state_assert_phase':

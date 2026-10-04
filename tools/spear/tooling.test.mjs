@@ -63,6 +63,21 @@ test('failed rename preserves state and removes its temporary file', t => {
   assert.deepEqual(fs.readdirSync(f.directory), ['state.json']);
 });
 
+test('history append failure warns without misreporting a persisted transition', t => {
+  const f = fixture(t, '{"version":1,"phase":"idle"}');
+  const code = `import fs from 'node:fs';
+    fs.appendFileSync = () => { throw Error('injected history failure'); };
+    process.argv = [process.execPath, ${JSON.stringify(stateScript)}, 'state_set_phase', 'spec'];
+    await import(${JSON.stringify(pathToFileURL(stateScript).href)});`;
+  const result = spawnSync(process.execPath, ['--input-type=module', '-e', code], {env: f.env, encoding: 'utf8'});
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /SPEAR state saved, but history append failed: injected history failure/);
+  assert.equal(JSON.parse(fs.readFileSync(f.file, 'utf8')).phase, 'spec');
+  const invalid = spawnSync(process.execPath, [stateScript, 'state_set_phase', 'engine'], {env: f.env, encoding: 'utf8'});
+  assert.notEqual(invalid.status, 0);
+  assert.equal(JSON.parse(fs.readFileSync(f.file, 'utf8')).phase, 'spec');
+});
+
 test('successful transitions rename within the same directory and retain gates', t => {
   const f = fixture(t, '{"version":1,"phase":"idle"}');
   const code = `import fs from 'node:fs'; import path from 'node:path';

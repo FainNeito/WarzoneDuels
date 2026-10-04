@@ -1,5 +1,14 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-023** - Report history append failures separately from persisted transitions.
+  Tag: TDD
+  References: REQ-032, REQ-025; docs/implementation.md SPEAR adoption.
+  Acceptance: a persisted phase change exits successfully with an explicit history warning when history append fails; subsequent invalid transitions still fail.
+  Evidence:
+  - tools/spear/state.mjs save replaces the state using renameSync before appendFileSync; append failure currently propagates after the transition has succeeded.
+  - tools/spear/tooling.test.mjs already uses isolated node:fs fault injection, node:child_process spawnSync and temporary state files to exercise real command outcomes. No new imports or dependencies are required.
+  Validation: the injected append failure reproduced a nonzero command result after state persistence; the fix passes all seven Node tests, including preserved phase gates and failed-rename protection. EARS passes and clean Java 25 / Paper 26.2 verify passes all 126 Java tests. No Java imports, architecture boundaries or gameplay behavior changed.
+
 - [x] **TDD-022** - Enforce same-IP admission across complete party rosters.
   Tag: TDD
   References: REQ-031, REQ-007; docs/implementation.md competitive-core and match-execution.
