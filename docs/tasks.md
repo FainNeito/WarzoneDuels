@@ -1,5 +1,16 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **INFRA-004** - Reconcile current upstream tests and traceable review delivery.
+  Tag: INFRA
+  References: REQ-014, REQ-018, REQ-029; docs/implementation.md platform-compatibility and SPEAR adoption.
+  Acceptance: Preserve upstream tests from 480a365 and existing feature commits including 9f2466a in an isolated worktree. Both hosted workflows use Java 25 and exact PR heads; the stable test artifact excludes the unshaded original JAR and includes source commit/checksum metadata. Re-run both pinned Paper API suites, Node tooling and EARS; document local, CI, review, staging and production status separately. No automatic merge, production upload or activation.
+  Evidence:
+  - Fetched origin/main at 480a365; its changes since 09d048f are TESTING.md, tests.yml and five deterministic test suites. fork/main remains 09d048f; existing FainNeito/WarzoneDuels PR #1 is open at 4cae280. The original checkout/untracked logs and staged test JAR are preserved.
+  - pom.xml, docs/tech-stack.md and verify.yml pin Java 25, Paper 26.2.build.123-stable and Paper 26.3.build.8-alpha. Newly merged tests.yml still selects Java 21, conflicting with release 25; reuse the inspected immutable checkout/setup-java pins from verify.yml.
+  - Maven Shade leaves original-WarzoneDuels-1.0.5.jar next to the shaded deliverable. Restrict the hosted artifact glob to target/WarzoneDuels-*.jar and include git rev-parse HEAD plus sha256sum metadata after the stable build.
+  - This task changes CI/documentation and combines previously verified source with upstream tests, not gameplay semantics: prove/engine are intentionally skipped. TDD-020 retains its original red/green evidence; new results will be recorded separately without fabricating another red.
+  Validation: docs/evidence/cooldown-review-26.3.log and cooldown-review-26.2.log each pass clean verify with 123 Java tests and zero failures/errors/skips; stable build last. Six separate Node tests, EARS and diff whitespace checks pass. This task adds no Java imports or domain annotations; workflow/documentation-only architecture inspection passes. All 14 existing PR #1 review threads are resolved; CodeRabbit status succeeds only on the older 4cae280 head, not the new cooldown source. Publication is held pending the user's canonical-repository choice; new exact-head GitHub CI/review is not yet available. Local build results are not production/client acceptance.
+
 - [x] **TDD-020** - Persist configurable duel and repeat-opponent cooldowns.
   Tag: TDD
   References: REQ-029; docs/implementation.md persistence-and-recovery and match-execution.

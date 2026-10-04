@@ -28,6 +28,16 @@ Brownfield baseline before SPEAR adoption: Maven clean verify passed 26 tests wi
 
 Automated tests and a clean package build do not approve production deployment. Paper/client behavior, plugin interoperability, restart recovery, and latency-sensitive combat remain staging checks.
 
+## Current cooldown review delivery (2026-10-04)
+
+The isolated review branch starts at fetched upstream main `480a365` and incorporates the existing team/admin/evidence work plus cooldown commit `9f2466a`, preserving the upstream regression suites. REQ-029 is covered by `DuelCooldownPolicyTest`, `DuelCooldownServiceTest`, `DuelCooldownAdmissionTest` and `DuelCooldownWiringTest`: UUID-pair history, independent configuration, party-member guards, exact expiry, restart persistence and fail-closed storage. The original 102-test result is historical evidence before the upstream tests were combined, not a claim for this review head.
+
+Current local verification passes 123 Java tests against each pinned Paper API, then six independent Node tooling tests and EARS. Stable 26.2 verification ran last; logs are `docs/evidence/cooldown-review-26.3.log` and `cooldown-review-26.2.log`. Existing PR #1's 14 review threads are resolved and CodeRabbit succeeded at `4cae280`, but neither result is fresh review approval of the new cooldown/reconciliation head. Publication and exact-head hosted checks are pending the user's canonical-repository choice (the existing fork PR versus upstream).
+
+Both workflows must use Java 25 and exact PR heads. CI's stable shaded JAR includes source-commit/checksum metadata and excludes the unshaded original. The previously uploaded `/plugins/chapter 2 staging/WarzoneDuels-1.0.5-cooldown-test.1.jar` remains an unmerged local test artifact from the older source, not a merged release or production activation.
+
+Production delivery requires reviewed/merged source on the confirmed canonical main branch, a clean checkout of that exact merged commit, canonical clean build/CI verification, version/SHA-256 recording and explicit deployment authorization. No production action or PR merge is authorized by this delivery pass. No build-owning monorepo or dependency pin has been identified in this standalone repository; that must be verified if a combined build is later requested. Actual Paper/EnthusiaTags player-visible anti-farming acceptance remains open.
+
 Latest review-fix baseline: 70 Java tests pass on each pinned Paper API (`review-final-26.2.log`, `review-final-26.3.log`), and six Node tooling tests pass. The stable build produces `target/WarzoneDuels-1.0.3.jar`. The 62-test result below is historical 1.0.2 evidence, not the latest count.
 
 1.0.2 regression evidence: `PlaytestRegressionTest` executes all six DuelService spawn lookups against ArenaDefinition, checks complete-party victory labels, leader disband/index/invitation cleanup, and explosive self-versus-teammate damage (REQ-019 through REQ-021). Both pinned Paper API builds pass 62 tests. Live countdown, arrival, leader logout notification, and self-explosion checks remain in MANUAL_TESTING.md.

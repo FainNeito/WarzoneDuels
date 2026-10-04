@@ -53,10 +53,17 @@ jobs:
           path: target/surefire-reports/
           if-no-files-found: error
           retention-days: 14
+      - name: Record testing artifact provenance
+        run: |
+          git rev-parse HEAD > target/source-commit.txt
+          sha256sum target/WarzoneDuels-*.jar > target/SHA256SUMS
       - name: Upload verified testing artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: WarzoneDuels-test-jar-${{ github.event.pull_request.head.sha || github.sha }}
-          path: target/*.jar
+          path: |
+            target/WarzoneDuels-*.jar
+            target/source-commit.txt
+            target/SHA256SUMS
           if-no-files-found: error
           retention-days: 14
