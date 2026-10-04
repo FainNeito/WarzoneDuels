@@ -1,5 +1,9 @@
 # WarzoneDuels requirements
 
+### REQ-030 - Compatible historical analytics
+
+IF a stored analytics row has an unknown match type THEN THE SYSTEM SHALL read that row as NORMAL without modifying persisted data or breaking recent and player-specific queries.
+
 Date: 2026-09-17
 
 This is a brownfield SPEAR adoption. Requirements describing behavior that predates adoption are baseline requirements and do not claim historical red/green evidence.

@@ -1,5 +1,12 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-021** - Read unknown historical analytics match types safely.
+  Tag: TDD
+  References: REQ-030; docs/implementation.md persistence-and-recovery.
+  Acceptance: Real H2 recent and player-specific queries retain an unknown-type row as NORMAL and preserve its participants and stored value; valid PARTY values stay unchanged.
+  Evidence: DuelAnalyticsStore.readRecord currently invokes DuelMatchType.valueOf without a fallback. Existing DuelAnalyticsTransactionTest uses java.sql.Connection, java.sql.DriverManager, java.util.UUID and org.junit.jupiter.api.Test/assertions against the real H2 schema; no new imports or dependencies are required. RuntimeStateStore already uses safe enum fallback for legacy state. Canonical origin/main 480a365 is included in current PR head e006881, and the clean isolated ongoing branch is preserved.
+  Validation: Real H2 regression failed one assertion on the prior PR head (unknown OLD_PARTY threw from findRecent); all seven analytics tests pass after the minimal adapter fallback. Both Paper 26.3 and stable 26.2 clean verify pass 124 Java tests with no failures/errors/skips; six Node tests and EARS pass. No new imports, framework coupling, permissions or data writes. SPEAR phases recorded through refine. Hosted exact-head checks/review remain separate; no staging or production change.
+
 - [x] **INFRA-004** - Reconcile current upstream tests and traceable review delivery.
   Tag: INFRA
   References: REQ-014, REQ-018, REQ-029; docs/implementation.md platform-compatibility and SPEAR adoption.

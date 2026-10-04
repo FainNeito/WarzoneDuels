@@ -437,10 +437,18 @@ public final class DuelAnalyticsStore {
             resultSet.getBoolean("counted_as_match"),
             resultSet.getInt("spectator_count"),
             resultSet.getDouble("wager"),
-            DuelMatchType.valueOf(resultSet.getString("match_type")),
+            readMatchType(resultSet.getString("match_type")),
             resultSet.getInt("team_size"),
             readParticipants(resultSet.getString("reference"))
         );
+    }
+
+    private DuelMatchType readMatchType(String value) {
+        try {
+            return DuelMatchType.valueOf(value);
+        } catch (IllegalArgumentException ex) {
+            return DuelMatchType.NORMAL;
+        }
     }
 
     private void insertParticipants(DuelRecord record) throws SQLException {

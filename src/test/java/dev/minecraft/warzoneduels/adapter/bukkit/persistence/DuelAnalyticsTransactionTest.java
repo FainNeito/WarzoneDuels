@@ -20,6 +20,32 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DuelAnalyticsTransactionTest {
     @Test
+    void unknownMatchTypeKeepsRecentAndPlayerQueriesUsableWithoutRewritingHistory() throws Exception {
+        try (Connection connection = database()) {
+            DuelAnalyticsStore store = store(connection);
+            DuelRecord original = record("legacy-type", false);
+            store.insert(original);
+            try (var statement = connection.createStatement()) {
+                statement.executeUpdate("UPDATE duel_records SET match_type = 'OLD_PARTY' WHERE reference = 'legacy-type'");
+            }
+            assertEquals(DuelMatchType.NORMAL, assertDoesNotThrow(() -> store.findRecent(10)).getFirst().matchType());
+            var playerRows = assertDoesNotThrow(() -> store.findRecentForPlayer(original.playerOneId(), 10));
+            assertEquals(1, playerRows.size());
+            assertEquals(DuelMatchType.NORMAL, playerRows.getFirst().matchType());
+            assertEquals(original.participants(), playerRows.getFirst().participants());
+            try (var statement = connection.createStatement();
+                 var result = statement.executeQuery("SELECT match_type FROM duel_records WHERE reference = 'legacy-type'")) {
+                assertTrue(result.next());
+                assertEquals("OLD_PARTY", result.getString(1));
+            }
+            try (var statement = connection.createStatement()) {
+                statement.executeUpdate("UPDATE duel_records SET match_type = 'PARTY' WHERE reference = 'legacy-type'");
+            }
+            assertEquals(DuelMatchType.PARTY, store.findRecent(10).getFirst().matchType());
+        }
+    }
+
+    @Test
     void failedRollbackDiscardsConnectionWithoutImplicitCommit() throws Exception {
         try (Connection connection = database()) {
             var restoredAutoCommit = new java.util.concurrent.atomic.AtomicBoolean();
