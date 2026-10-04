@@ -54,7 +54,15 @@ public final class RuntimeStateStore {
     }
 
     public void queueActiveDuelSave(ActiveDuel duel, long delayTicks) {
-        SerializedActiveDuel snapshot = serializeActiveDuel(duel);
+        queueActiveDuelSave(duel, Set.of(), delayTicks);
+    }
+
+    public void queueActiveDuelSave(ActiveDuel duel, Set<UUID> eliminatedIds) {
+        queueActiveDuelSave(duel, eliminatedIds, ACTIVE_SAVE_DEBOUNCE_TICKS);
+    }
+
+    public void queueActiveDuelSave(ActiveDuel duel, Set<UUID> eliminatedIds, long delayTicks) {
+        SerializedActiveDuel snapshot = serializeActiveDuel(duel, eliminatedIds);
         synchronized (lock) {
             runtimeRevision++;
             pendingActiveDuel = snapshot;
@@ -71,6 +79,10 @@ public final class RuntimeStateStore {
     }
 
     public void saveActiveDuelSync(ActiveDuel duel) {
+        saveActiveDuelSync(duel, Set.of());
+    }
+
+    public void saveActiveDuelSync(ActiveDuel duel, Set<UUID> eliminatedIds) {
         synchronized (lock) {
             runtimeRevision++;
             pendingActiveDuel = null;
@@ -79,7 +91,7 @@ public final class RuntimeStateStore {
                 queuedActiveSaveTask = null;
             }
         }
-        writeActiveDuel(serializeActiveDuel(duel));
+        writeActiveDuel(serializeActiveDuel(duel, eliminatedIds));
     }
 
     public PersistedRuntime loadActiveDuel() {
@@ -105,7 +117,11 @@ public final class RuntimeStateStore {
                 }
             }
             duel.setArenaSnapshot(readArenaSnapshot(yaml.getConfigurationSection("arena-snapshot")));
-            return new PersistedRuntime(duel, resumeMarkerFile.exists());
+            Set<UUID> eliminatedIds = yaml.getStringList("eliminated-participants").stream()
+                .map(this::safeUuid)
+                .filter(id -> id != null && duel.contains(id))
+                .collect(Collectors.toUnmodifiableSet());
+            return new PersistedRuntime(duel, resumeMarkerFile.exists(), eliminatedIds);
         } catch (RuntimeException ex) {
             plugin.getLogger().warning("Ignoring corrupt runtime duel state: " + ex.getMessage());
             return new PersistedRuntime(null, false);
@@ -240,7 +256,7 @@ public final class RuntimeStateStore {
         writeActiveDuel(snapshot);
     }
 
-    private SerializedActiveDuel serializeActiveDuel(ActiveDuel duel) {
+    private SerializedActiveDuel serializeActiveDuel(ActiveDuel duel, Set<UUID> eliminatedIds) {
         if (duel == null) {
             return null;
         }
@@ -256,7 +272,8 @@ public final class RuntimeStateStore {
             duel.isWagerHeld(),
             duel.getWagerPot(),
             duel.placedBlocks().stream().map(this::serializeBlockKey).toList(),
-            serializeArenaSnapshot(duel.arenaSnapshot())
+            serializeArenaSnapshot(duel.arenaSnapshot()),
+            eliminatedIds.stream().filter(duel::contains).map(UUID::toString).sorted().toList()
         );
     }
 
@@ -329,6 +346,7 @@ public final class RuntimeStateStore {
             yaml.set("wager-held", duel.wagerHeld());
             yaml.set("wager-pot", duel.wagerPot());
             yaml.set("placed-blocks", duel.placedBlocks());
+            yaml.set("eliminated-participants", duel.eliminatedParticipantIds());
             writeArenaSnapshot(yaml.createSection("arena-snapshot"), duel.arenaSnapshot());
         }
         save(yaml, runtimeFile);
@@ -568,7 +586,14 @@ public final class RuntimeStateStore {
         }
     }
 
-    public record PersistedRuntime(ActiveDuel activeDuel, boolean resumeAllowed) {
+    public record PersistedRuntime(ActiveDuel activeDuel, boolean resumeAllowed, Set<UUID> eliminatedParticipantIds) {
+        public PersistedRuntime {
+            eliminatedParticipantIds = Set.copyOf(eliminatedParticipantIds);
+        }
+
+        public PersistedRuntime(ActiveDuel activeDuel, boolean resumeAllowed) {
+            this(activeDuel, resumeAllowed, Set.of());
+        }
     }
 
     private record SerializedActiveDuel(
@@ -583,7 +608,8 @@ public final class RuntimeStateStore {
         boolean wagerHeld,
         double wagerPot,
         java.util.List<String> placedBlocks,
-        Map<String, SerializedBlockState> arenaSnapshot
+        Map<String, SerializedBlockState> arenaSnapshot,
+        java.util.List<String> eliminatedParticipantIds
     ) {
     }
 

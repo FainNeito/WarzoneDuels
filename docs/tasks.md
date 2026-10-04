@@ -1,5 +1,16 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-024** - Preserve eliminated party members through runtime persistence and reload.
+  Tag: TDD
+  References: REQ-033; docs/implementation.md persistence-and-recovery and match-execution.
+  Acceptance: real YAML save/load preserves only eliminated roster UUIDs and ignores malformed/foreign IDs; legacy files and existing save signatures remain supported. Recovery restores elimination state before participant indexing and skips eliminated players in its teleport loop.
+  Evidence:
+  - RuntimeStateStore serializes team rosters and returns PersistedRuntime, but currently omits DuelService.eliminatedParticipantIds; queueActiveDuelSave and saveActiveDuelSync are the existing snapshot boundaries.
+  - DuelService.handleDeath and disconnect timeout add eliminated IDs before queued saves. disable flushes an active duel synchronously with a reload marker; recoverActiveDuelIfNeeded currently restores only the duel then indexes/teleports the full roster.
+  - Existing persistence tests use sun.misc.Unsafe and java.lang.reflect.Field to supply a WarzoneDuelsPlugin/JavaPlugin fixture without booting Paper; org.bukkit.configuration.file.YamlConfiguration supports real temporary-file round trips. Domain ActiveDuel, MatchTeam, MatchParticipant, DuelMatchType, DuelSettings and TeamMatchPolicy define roster and survivor semantics.
+  - JUnit Jupiter Test/TempDir, java.nio.file.Files/Path, java.util.Set/List/UUID, java.util.logging.Logger and existing source-wiring tests provide isolated persistence and integration-contract coverage. These tests do not claim live Paper reload acceptance.
+  Validation: after correcting a test fixture API argument, both new assertions failed on the missing elimination snapshot/recovery behavior. Real YAML round-trip now preserves eliminated roster IDs, ignores foreign/malformed UUIDs and supports legacy missing data and the original synchronous save signature. Source-contract coverage confirms restoration before indexing and the recovery teleport guard; it is not an end-to-end Paper reload test. Both pinned Paper 26.3 and 26.2 clean verification profiles pass 128 Java tests; seven Node tests and EARS pass. Old queue/save signatures and the two-argument PersistedRuntime constructor remain available; no new runtime imports or domain coupling.
+
 - [x] **TDD-023** - Report history append failures separately from persisted transitions.
   Tag: TDD
   References: REQ-032, REQ-025; docs/implementation.md SPEAR adoption.

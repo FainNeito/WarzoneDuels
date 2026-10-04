@@ -271,7 +271,7 @@ public final class DuelService {
         }
 
         if (activeDuel != null) {
-            runtimeStateStore.saveActiveDuelSync(activeDuel);
+            runtimeStateStore.saveActiveDuelSync(activeDuel, eliminatedParticipantIds);
             runtimeStateStore.markReloadResume();
         } else {
             runtimeStateStore.clearRuntime();
@@ -907,7 +907,7 @@ public final class DuelService {
             concludeDuel((Player) null, DuelEndReason.DRAW, true);
             return;
         }
-        runtimeStateStore.queueActiveDuelSave(activeDuel);
+        runtimeStateStore.queueActiveDuelSave(activeDuel, eliminatedParticipantIds);
     }
 
     public void showSettings(Player player) {
@@ -1103,7 +1103,7 @@ public final class DuelService {
         participant.setDisconnectDeadlineEpochMs(System.currentTimeMillis() + (disconnectGraceSeconds * 1000L));
         sendToParticipants("messages.disconnect-grace", PLAYER_PLACEHOLDER, participant.name(), "{seconds}", String.valueOf(disconnectGraceSeconds));
         startDisconnectMonitor();
-        runtimeStateStore.queueActiveDuelSave(activeDuel);
+        runtimeStateStore.queueActiveDuelSave(activeDuel, eliminatedParticipantIds);
     }
 
     public void handleJoin(Player player) {
@@ -1159,7 +1159,7 @@ public final class DuelService {
         } else {
             startDisconnectMonitor();
         }
-        runtimeStateStore.queueActiveDuelSave(activeDuel);
+        runtimeStateStore.queueActiveDuelSave(activeDuel, eliminatedParticipantIds);
     }
 
     public void handleRespawn(PlayerRespawnEvent event) {
@@ -1200,7 +1200,7 @@ public final class DuelService {
         pendingDeaths.put(dead.playerId(), new PendingDeath(dead, killerId, List.copyOf(drops)));
         respawnToSpawn.add(dead.playerId());
         activeParticipantIndex.remove(dead.playerId());
-        runtimeStateStore.queueActiveDuelSave(activeDuel);
+        runtimeStateStore.queueActiveDuelSave(activeDuel, eliminatedParticipantIds);
         if (deathResolutionTask == null) {
             deathResolutionTask = Bukkit.getScheduler().runTask(plugin, this::resolvePendingDeaths);
         }
@@ -1939,10 +1939,15 @@ public final class DuelService {
             return;
         }
         activeDuel = persistedRuntime.activeDuel();
+        eliminatedParticipantIds.clear();
+        eliminatedParticipantIds.addAll(persistedRuntime.eliminatedParticipantIds());
         arenaMapService.prepareArenaForMatch(arena, activeDuel.settings());
         rebuildParticipantIndex();
         for (MatchParticipant participant : activeDuel.participants()) {
             UUID playerId = participant.playerId();
+            if (eliminatedParticipantIds.contains(playerId)) {
+                continue;
+            }
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
                 clearExternalCombatState(player);
@@ -2115,7 +2120,7 @@ public final class DuelService {
             String wagerText = preparedSettings.getWager() > NO_WAGER ? " for $" + formatAmount(preparedSettings.getWager()) : "";
             broadcast("messages.duel-start", "{p1}", teamLabel(firstTeam), "{p2}", teamLabel(secondTeam), "{wager}", wagerText);
             broadcastWatchPrompt(activeDuel.participants().stream().map(MatchParticipant::playerId).collect(java.util.stream.Collectors.toSet()));
-            runtimeStateStore.queueActiveDuelSave(activeDuel, 1L);
+            runtimeStateStore.queueActiveDuelSave(activeDuel, eliminatedParticipantIds, 1L);
             startCountdown(participants);
         }, message -> {
             if (preparingDuel == stagedDuel) {
@@ -2486,7 +2491,7 @@ public final class DuelService {
             sendToParticipants("messages.disconnect-loss", PLAYER_PLACEHOLDER, expired.name());
             Optional<MatchTeam> winningTeam = TeamMatchPolicy.winningTeam(activeDuel, eliminatedParticipantIds);
             if (winningTeam.isEmpty()) {
-                runtimeStateStore.queueActiveDuelSave(activeDuel);
+                runtimeStateStore.queueActiveDuelSave(activeDuel, eliminatedParticipantIds);
                 return;
             }
             concludeDuel(winningTeam.get(), DuelEndReason.DISCONNECT_TIMEOUT, true);
@@ -3111,7 +3116,7 @@ public final class DuelService {
         }
         if (duelTimeLimitSeconds <= 0) {
             activeDuel.setDuelDeadlineEpochMs(null);
-            runtimeStateStore.queueActiveDuelSave(activeDuel);
+            runtimeStateStore.queueActiveDuelSave(activeDuel, eliminatedParticipantIds);
             return;
         }
         long now = System.currentTimeMillis();
@@ -3119,7 +3124,7 @@ public final class DuelService {
         if (deadline == null) {
             deadline = DuelDurationPolicy.deadlineEpochMs(now, duelTimeLimitSeconds);
             activeDuel.setDuelDeadlineEpochMs(deadline);
-            runtimeStateStore.queueActiveDuelSave(activeDuel);
+            runtimeStateStore.queueActiveDuelSave(activeDuel, eliminatedParticipantIds);
         }
         long delayTicks = Math.max(1L, DuelDurationPolicy.remainingTicks(deadline, now));
         duelTimeLimitTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {

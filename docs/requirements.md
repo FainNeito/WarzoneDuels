@@ -1,5 +1,9 @@
 # WarzoneDuels requirements
 
+### REQ-033 - Preserve eliminated party participants on reload
+
+WHEN an active duel is saved and resumed after a plugin reload THE SYSTEM SHALL persist and restore eliminated roster UUIDs before rebuilding the participant index, exclude eliminated players from recovery teleports, and interpret legacy saves without elimination data as having no eliminated players.
+
 ### REQ-032 - Truthful SPEAR history failure reporting
 
 IF SPEAR history append fails after a state replacement succeeds THEN THE SYSTEM SHALL report a history warning without reporting that the persisted transition failed or weakening phase gates.
