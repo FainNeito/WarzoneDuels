@@ -602,6 +602,12 @@ public final class DuelService {
             sendMessage(requester, MSG_TARGET_OFFLINE);
             return true;
         }
+        int firstTeamSize = challenge.challengerTeam().participants().size();
+        if (hasOpposingSameIp(participants.subList(0, firstTeamSize),
+            participants.subList(firstTeamSize, participants.size()))) {
+            sendMessage(requester, "messages.same-ip-blocked");
+            return true;
+        }
         for (Player participant : participants) {
             if (isCombatTagged(participant)) {
                 sendMessageRaw(requester, prefix + ChatColor.RED + participant.getName() + " is currently in combat.");
@@ -2886,6 +2892,11 @@ public final class DuelService {
 
     private Location exitLocation() {
         return spawnPort.resolveSpawnFallback(arena == null ? null : arena.exit());
+    }
+
+    private boolean hasOpposingSameIp(List<Player> firstTeam, List<Player> secondTeam) {
+        return !allowSameIp && firstTeam.stream().anyMatch(first ->
+            secondTeam.stream().anyMatch(second -> sameIp(first, second)));
     }
 
     private boolean sameIp(Player a, Player b) {

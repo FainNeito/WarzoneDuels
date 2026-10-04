@@ -1,5 +1,9 @@
 # WarzoneDuels requirements
 
+### REQ-031 - Party same-IP admission
+
+WHEN party rosters are checked before admission THE SYSTEM SHALL enforce the configured same-IP restriction across every opposing participant pair while allowing shared teammate addresses and preserving the allow-same-IP opt-out and missing-address behavior.
+
 ### REQ-030 - Compatible historical analytics
 
 IF a stored analytics row has an unknown match type THEN THE SYSTEM SHALL read that row as NORMAL without modifying persisted data or breaking recent and player-specific queries.

@@ -1,5 +1,12 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-022** - Enforce same-IP admission across complete party rosters.
+  Tag: TDD
+  References: REQ-031, REQ-007; docs/implementation.md competitive-core and match-execution.
+  Acceptance: Opposing non-leaders with matching IPs are blocked when configured; shared teammate IPs, missing addresses and the opt-out remain allowed; the common send/accept roster guard invokes the check.
+  Evidence: DuelService.onlinePartyParticipants concatenates challenger then opponent players; rejectPartyRoster is called during request and acceptance; sameIp already defines null/unresolved-address behavior. Existing DuelModeControlsTest uses java.lang.reflect.Proxy, Field, java.util.List, java.nio.file.Files/Path, org.bukkit.entity.Player, org.junit.jupiter.api.Test/assertions and an Unsafe fixture for the real service. Test addresses use JDK java.net.InetSocketAddress; no production imports or dependencies are added.
+  Validation: Two assertions failed before implementation (missing roster guard and helper); seven focused service tests pass after implementation, including opposing non-leaders, teammate-only sharing, null addresses and configured opt-out. This is a proxy-based service check plus source-wiring contract, not an end-to-end Paper proof. Paper 26.3 and stable 26.2 clean verify each pass 126 Java tests, zero failures/errors/skips; six Node tests and EARS pass. No new production imports or framework coupling; the small existing Bukkit service adapter uses its existing sameIp semantics. Hosted review/checks and live-player acceptance remain pending. No production changes.
+
 - [x] **TDD-021** - Read unknown historical analytics match types safely.
   Tag: TDD
   References: REQ-030; docs/implementation.md persistence-and-recovery.

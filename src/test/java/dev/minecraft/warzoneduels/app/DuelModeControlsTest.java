@@ -25,6 +25,39 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DuelModeControlsTest {
+    @Test
+    void opposingNonLeaderAddressesAreCheckedWithoutBlockingTeammatesOrOptOut() throws Exception {
+        DuelService service = service(new YamlConfiguration(), directory);
+        var check = assertDoesNotThrow(() -> DuelService.class.getDeclaredMethod(
+            "hasOpposingSameIp", List.class, List.class));
+        check.setAccessible(true);
+        var first = List.of(addressPlayer("192.0.2.1"), addressPlayer("192.0.2.2"));
+        var opposing = List.of(addressPlayer("192.0.2.3"), addressPlayer("192.0.2.2"));
+        set(service, DuelService.class, "allowSameIp", false);
+        assertEquals(true, check.invoke(service, first, opposing));
+        assertEquals(false, check.invoke(service,
+            List.of(addressPlayer("192.0.2.1"), addressPlayer("192.0.2.1")),
+            List.of(addressPlayer("192.0.2.3"), addressPlayer("192.0.2.4"))));
+        assertEquals(false, check.invoke(service, List.of(addressPlayer(null)), opposing));
+        set(service, DuelService.class, "allowSameIp", true);
+        assertEquals(false, check.invoke(service, first, opposing));
+    }
+
+    @Test
+    void partyAdmissionWiresTheSameIpCheckAfterResolvingCompleteRosters() throws Exception {
+        String source = Files.readString(Path.of("src/main/java/dev/minecraft/warzoneduels/app/DuelService.java"));
+        String guard = source.substring(source.indexOf("private boolean rejectPartyRoster("),
+            source.indexOf("private boolean rejectRequestPlayers("));
+        assertTrue(guard.contains("hasOpposingSameIp("));
+        assertTrue(guard.contains("messages.same-ip-blocked"));
+    }
+
+    private Player addressPlayer(String address) {
+        return (Player) Proxy.newProxyInstance(Player.class.getClassLoader(), new Class<?>[]{Player.class},
+            (proxy, method, args) -> method.getName().equals("getAddress") && address != null
+                ? new java.net.InetSocketAddress(address, 25565) : null);
+    }
+
     @TempDir Path directory;
     private final List<String> messages = new ArrayList<>();
     private final Command duelCommand = new Command("duel") {
