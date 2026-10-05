@@ -54,13 +54,13 @@ Generate `docs/tasks.md`. Every initial task MUST:
 
 ### 5. JVM Konsist drop
 
-IF JVM was detected in step 1:
+IF JVM was detected in step 1 AND the build already configures Kotlin test compilation and the Konsist test dependency:
 
 Copy `${CLAUDE_PLUGIN_ROOT}/templates/LayerRulesTest.kt` to `src/test/kotlin/architecture/LayerRulesTest.kt`. Substitute `__BASE_PACKAGE__` with the detected top-level package (read from Gradle/Maven config, e.g. `group` + main source-set package). Create parent directories as needed.
 
 ### 6. Non-JVM notice
 
-IF the project is not JVM, emit one stdout line: `Skipping Konsist template (non-JVM project).`
+Otherwise emit `Skipping Konsist template (Kotlin test compilation and Konsist are not configured).` Java-only Maven projects must use their existing Java architecture checks; file existence alone is not validation. Do not silently add Kotlin or dependencies.
 
 ### 7. Commit
 
@@ -72,12 +72,12 @@ git add docs/tech-stack.md docs/requirements.md docs/implementation.md docs/task
 git commit -m "chore(spear): initialize SPEAR docs"
 ```
 
-Do not include any other paths in this commit.
+Inspect `git diff --cached --name-only` before and after staging. If unrelated staged paths exist, stop without unstaging or committing them. Do not include any other paths in this commit.
 
 ## Acceptance
 
 - Four docs exist under `docs/`.
-- On JVM, `LayerRulesTest.kt` exists at the required path with `__BASE_PACKAGE__` substituted.
+- Where Kotlin test compilation and Konsist are configured, `LayerRulesTest.kt` exists with `__BASE_PACKAGE__` substituted and actually compiles/runs. Otherwise record the explicit skip and existing architecture gate.
 - Every REQ in `requirements.md` passes the EARS validator.
 - Every task in `tasks.md` has a tag, `References:`, and an empty `Evidence:`.
 - A single commit with the required subject contains exactly the listed files.

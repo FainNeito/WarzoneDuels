@@ -76,7 +76,7 @@ SPEAR skills are loaded by name. Ask Codex to:
 At the start of any SPEAR interaction, read `.claude/spear-state.json` from the project root (if it exists):
 
 ```bash
-cat .claude/spear-state.json 2>/dev/null | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8');const j=JSON.parse(d);console.log('Phase:',j.phase,'Task:',j.currentTaskId||'none');"
+node -e "const fs=require('fs');const p='.claude/spear-state.json';const j=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):{phase:'idle'};console.log('Phase:',j.phase,'Task:',j.currentTaskId||'none');"
 ```
 
 If the file doesn't exist, the phase is `idle`.

@@ -26,11 +26,14 @@ Guild champions, guild permissions, active-war checks, champion settlements, war
 5. Make wagers, spoils, stats, analytics, spectating, announcements, and runtime recovery team-aware.
 6. Exercise 1v1 regression plus 2v2/3v3 Paper-server scenarios before enabling party matches in production.
 
-## Deferred decisions
+## Resolved match decisions
 
-- Whether a disconnected party member is immediately eliminated or receives a grace period.
-- Whether normal party matches permit wagers and, if so, how contributions and payouts are divided.
-- Whether teammates can damage one another.
+- Disconnected party members receive the configured disconnect grace period.
+- Normal party wagers are rejected until contribution and payout policy is explicitly designed.
+- Teammate damage is cancelled.
+
+## Deferred lifecycle decision
+
 - Whether a party survives logout/restart or is intentionally session-only.
 
-These choices affect persistence and payout design and should be settled before wiring party challenges into the live match service.
+The remaining lifecycle decision must preserve existing runtime match recovery. Actual Paper party acceptance remains a separate release gate.

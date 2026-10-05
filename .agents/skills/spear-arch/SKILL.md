@@ -31,7 +31,7 @@ Also parse `## Forbidden Domain Annotations` and extract the `forbidden: [...]` 
 
 ### Step 4 — Enumerate changed files
 
-Run `git diff --name-only` against the arch baseline (fall back to working tree). Classify each file's layer by path prefix; files outside the three prefixes are ignored.
+Run `git diff --name-only` against the arch baseline (fall back to working tree). Normalize repository-relative paths by removing `src/main/java/dev/minecraft/warzoneduels/` before classification: `domain/**` is domain, `app/**` is application, and `adapter/**` is infrastructure. Files outside that source root are not gameplay layer files. Apply the documented brownfield exceptions only to existing coupling.
 
 ### Step 5 — Validate import direction
 

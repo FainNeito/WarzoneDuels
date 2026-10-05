@@ -25,7 +25,7 @@ Stop immediately. Do NOT mutate any state.
 
 ### Step 2 — Assert predecessor phase
 
-Shell out to `node tools/spear/state.mjs state_assert_phase spec-done`. On non-zero exit, surface the printed message and stop — do NOT proceed.
+Read the current task and phase. Accept `spec-done` initially or `prove` when resuming the same task after a failed evidence gate. Reject every other phase. Recheck the task and evidence on resume; do not reset state.
 
 ### Step 3 — Evidence gate
 
@@ -39,7 +39,7 @@ Do NOT change phase. Remain in `spec-done`, populate the evidence, and retry fro
 
 ### Step 4 — Set phase to `prove`
 
-Only after the initial Evidence gate succeeds, run `node tools/spear/state.mjs state_set_phase prove`.
+Only on the initial `spec-done` invocation, after the Evidence gate succeeds, run `node tools/spear/state.mjs state_set_phase prove`. When already in `prove`, skip this transition, reuse the existing failing test, rerun it as needed and retry the import-evidence gate. Never record red unless the behavior assertion still fails meaningfully.
 
 ### Step 5 — Write the failing test
 

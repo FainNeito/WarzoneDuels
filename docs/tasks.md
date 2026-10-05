@@ -1,5 +1,13 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **DOC-004** - Correct reviewed SPEAR routing and historical planning guidance.
+  Tag: DOC
+  References: REQ-025; docs/implementation.md SPEAR adoption.
+  Acceptance: actual Java package paths receive layer checks; prove retries retain state; missing state reports idle; Kotlin scaffolding requires actual build support; final checks follow the project stack; commits reject unrelated staged paths; settled party behavior is documented.
+  Evidence:
+  - Existing tools/spear/state.mjs, Maven manifest, Java source layout and phase procedures define the supported workflow; current implementation documents disconnect grace, rejected party wagers and cancelled friendly fire.
+  Validation: documentation-only corrections; no new runtime behavior, imports, or behavioral prove/engine steps apply. EARS, seven Node tests, clean stable Maven verify (134 Java tests) and diff checks pass. Reviewed each instruction against source layout, manifest and state transitions; architecture inspection has no changed gameplay source in this task.
+
 - [x] **TDD-026** - Recover repaired cooldown storage and prune expired enabled history.
   Tag: TDD
   References: REQ-035, REQ-036, REQ-029; docs/implementation.md persistence-and-recovery.

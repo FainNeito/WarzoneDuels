@@ -38,7 +38,7 @@ Run all mandatory final gates before closing the task:
 
 1. `node tools/spear/ears.mjs docs/requirements.md`
 2. `node --test tools/spear/*.test.mjs`
-3. `mvn --batch-mode --no-transfer-progress clean verify`
+3. Run the project's declared clean build and full verification from its manifest and tech-stack documentation. In this Maven repository use `mvn --batch-mode --no-transfer-progress clean verify`; do not run Maven for non-Maven projects. If no final check is declared, stop and establish it rather than inventing a pass.
 
 Record Java and Node test counts separately. A test-only invocation does not replace clean package verification. If any gate fails:
 
@@ -65,7 +65,7 @@ This resets `phase` to `idle` and clears `currentTaskId`, `reqId`, `testFile`, `
 
 ### Step 8 — Commit
 
-Stage the refactored files and the `docs/tasks.md` update as a single commit following the project commit convention. The task is now complete.
+Inspect `git diff --cached --name-only` before staging and again before committing. If unrelated staged paths exist, stop without unstaging or committing them. Stage only this task's files and `docs/tasks.md` as a single commit following the project commit convention. The task is now complete.
 
 ---
 
