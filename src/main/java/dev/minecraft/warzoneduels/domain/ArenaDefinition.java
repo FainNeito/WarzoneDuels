@@ -97,7 +97,12 @@ public final class ArenaDefinition {
     }
 
     public boolean isReady() {
-        return world() != null;
+        return world() != null && hasValidTeamSpawns();
+    }
+
+    public boolean hasValidTeamSpawns() {
+        return java.util.stream.Stream.concat(firstTeamSpawns.stream(), secondTeamSpawns.stream())
+            .allMatch(this::contains);
     }
 
     public boolean contains(Location location) {
@@ -107,6 +112,10 @@ public final class ArenaDefinition {
         if (!location.getWorld().getName().equalsIgnoreCase(arenaWorldName)) {
             return false;
         }
+        return withinBounds(location);
+    }
+
+    private boolean withinBounds(Location location) {
         int minX = Math.min(firstCorner.getBlockX(), secondCorner.getBlockX());
         int maxX = Math.max(firstCorner.getBlockX(), secondCorner.getBlockX());
         int minY = Math.min(firstCorner.getBlockY(), secondCorner.getBlockY());

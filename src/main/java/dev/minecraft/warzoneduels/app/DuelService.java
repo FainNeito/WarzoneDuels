@@ -570,7 +570,12 @@ public final class DuelService {
             return;
         }
         List<Player> participants = onlinePartyParticipants(challenge);
-        if (participants == null || rejectPartyRoster(challenge, requester)) {
+        if (participants == null) {
+            sendMessage(requester, MSG_TARGET_OFFLINE);
+            challengeService.cancel(requester.getUniqueId(), System.currentTimeMillis());
+            return;
+        }
+        if (rejectPartyRoster(challenge, requester)) {
             challengeService.cancel(requester.getUniqueId(), System.currentTimeMillis());
             return;
         }

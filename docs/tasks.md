@@ -1,5 +1,14 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-029** - Reject unsafe party spawns and explain offline roster cancellation.
+  Tag: TDD
+  References: REQ-038, REQ-039; docs/implementation.md match-execution.
+  Acceptance: every team-member position lies within the existing containment volume before admission; defaults allow derived offsets to follow primary spawn edits; offline roster rejection sends feedback before cancellation.
+  Evidence:
+  - ArenaDefinition.contains/isReady/fallbackSpawnGroup already own bounds and legacy Bukkit Location coupling; retain that boundary without adding framework imports. Existing ArenaTeamSpawnTest provides Location and JUnit fixtures; java.lang.reflect.Proxy supplies the org.bukkit.World getName fixture without running a server. Readiness source wiring is separate from live Paper containment acceptance.
+  - Existing org.bukkit.configuration.file.YamlConfiguration/File plus java.nio.file.Files/Path and JUnit APIs cover default resource contracts. DuelService.sendPartyRequest already receives a null online roster and has MSG_TARGET_OFFLINE plus challengeService.cancel for failure handling.
+  Validation: three spawn-predicate and two adapter/default contract assertions failed before implementation and pass after it; all seven focused tests pass. Both pinned Paper profiles pass 143 Java tests; nine Node tests and EARS pass. Production imports add no framework coupling. Existing explicit installed overrides remain preserved but invalid arenas are now rejected; defaults affect new installs only. Actual multi-client containment and requester feedback remain test-server acceptance gates.
+
 - [x] **TDD-028** - Separate ordinary match results from durable advancement evidence.
   Tag: TDD
   References: REQ-037, REQ-029; docs/implementation.md persistence-and-recovery.

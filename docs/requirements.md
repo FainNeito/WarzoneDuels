@@ -2,6 +2,14 @@
 
 ## Safety and behavior
 
+### REQ-038 - Safe party spawns
+
+WHEN arena readiness is checked THE SYSTEM SHALL reject configured or derived team-member spawns outside the existing containment bounds, and SHALL ship optional secondary spawn overrides commented out so omitted positions follow moved primary spawns.
+
+### REQ-039 - Offline roster feedback
+
+IF a snapshotted party roster contains an offline member THEN THE SYSTEM SHALL notify the requester with the existing offline-target message before cancelling the challenge and releasing its roster locks.
+
 ### REQ-037 - Match finalization after cooldown failure
 
 IF completed-match cooldown persistence fails THEN THE SYSTEM SHALL preserve ordinary wins, losses and draws while withholding new specialized advancement evidence, completing recovery, cleanup and loot distribution, and keeping new duels blocked until storage recovers.

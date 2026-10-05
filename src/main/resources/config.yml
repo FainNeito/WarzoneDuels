@@ -88,10 +88,11 @@ arena:
   spawn2: "-140.5,172,-339.5"
 
   # Additional party-member positions. If omitted, deterministic +/-2 X offsets from spawn1/spawn2 are used.
-  team1-spawn2: "-138.5,172,-299.5"
-  team1-spawn3: "-142.5,172,-299.5"
-  team2-spawn2: "-138.5,172,-339.5"
-  team2-spawn3: "-142.5,172,-339.5"
+  # team1-spawn2: "-138.5,172,-299.5"
+  # team1-spawn3: "-142.5,172,-299.5"
+  # team2-spawn2: "-138.5,172,-339.5"
+  # team2-spawn3: "-142.5,172,-339.5"
+  # All configured or derived combatant positions must remain inside pos1/pos2.
 
   # Center point for the controlled pseudo-spectator boundary.
   spectator: "-140,182,-319"
