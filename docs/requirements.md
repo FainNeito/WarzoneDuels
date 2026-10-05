@@ -2,6 +2,10 @@
 
 ## Safety and behavior
 
+### REQ-040 - Close failed analytics initialization
+
+IF analytics initialization fails after opening a connection THEN THE SYSTEM SHALL close and discard that connection, preserve the original failure and any close failure in diagnostics, and permit a later initialization retry without changing transaction ownership or persisted records.
+
 ### REQ-038 - Safe party spawns
 
 WHEN arena readiness is checked THE SYSTEM SHALL reject configured or derived team-member spawns outside the existing containment bounds, and SHALL ship optional secondary spawn overrides commented out so omitted positions follow moved primary spawns.

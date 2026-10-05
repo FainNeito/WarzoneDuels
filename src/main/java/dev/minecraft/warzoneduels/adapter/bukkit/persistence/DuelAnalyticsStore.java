@@ -23,11 +23,22 @@ import java.util.UUID;
 public final class DuelAnalyticsStore {
     private final WarzoneDuelsPlugin plugin;
     private final File databaseFile;
+    private final ConnectionFactory connectionFactory;
     private Connection connection;
 
     public DuelAnalyticsStore(WarzoneDuelsPlugin plugin) {
+        this(plugin, DriverManager::getConnection);
+    }
+
+    DuelAnalyticsStore(WarzoneDuelsPlugin plugin, ConnectionFactory connectionFactory) {
         this.plugin = plugin;
         this.databaseFile = new File(plugin.getDataFolder(), "duel-analytics.mv.db");
+        this.connectionFactory = connectionFactory;
+    }
+
+    @FunctionalInterface
+    interface ConnectionFactory {
+        Connection open(String url) throws SQLException;
     }
 
     public synchronized void enable() {
@@ -44,12 +55,21 @@ public final class DuelAnalyticsStore {
             if (basePath.endsWith(".mv.db")) {
                 basePath = basePath.substring(0, basePath.length() - ".mv.db".length());
             }
-            connection = DriverManager.getConnection("jdbc:h2:file:" + basePath + ";AUTO_SERVER=FALSE;MODE=MySQL");
+            connection = connectionFactory.open("jdbc:h2:file:" + basePath + ";AUTO_SERVER=FALSE;MODE=MySQL");
             connection.setAutoCommit(true);
             initializeSchema();
         } catch (Exception ex) {
-            plugin.getLogger().warning("Failed to open duel analytics store: " + ex.getMessage());
+            Connection failedConnection = connection;
             connection = null;
+            if (failedConnection != null) {
+                try {
+                    failedConnection.close();
+                } catch (SQLException closeFailure) {
+                    ex.addSuppressed(closeFailure);
+                }
+            }
+            plugin.getLogger().log(java.util.logging.Level.WARNING,
+                    "Failed to open duel analytics store: " + ex.getMessage(), ex);
         }
     }
 

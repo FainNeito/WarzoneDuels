@@ -1,5 +1,17 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-030** - Close opened analytics connections when initialization fails.
+  Tag: TDD
+  References: REQ-040, REQ-022; docs/implementation.md persistence-and-recovery.
+  Acceptance: setup/DDL failure disposes the opened connection and clears store state; failed close is attached to the setup error; retry can initialize and persist a real record. The public constructor retains the existing JDBC URL/driver and no production operation occurs.
+  Evidence:
+  - Exact import-evidence audit identified shorthand omissions for java.lang.reflect.InvocationTargetException, java.lang.reflect.Proxy and java.util.logging.LogRecord; these use the existing reflective JDBC fixture and standard logging handler. Rechecked exact import paths after expanding this evidence; no new gameplay-layer coupling.
+  - Import gate: java.util.ArrayList, org.junit.jupiter.api.Assertions, dev.minecraft.warzoneduels.domain.DuelEndReason, dev.minecraft.warzoneduels.domain.DuelMatchType, dev.minecraft.warzoneduels.domain.analytics.DuelRecord, dev.minecraft.warzoneduels.domain.analytics.DuelRecordParticipant, java.util.UUID and java.util.List are existing JDK/domain/JUnit dependencies; java.util.logging.Level supplies throwable diagnostics in the persistence adapter.
+  - DuelAnalyticsStore.enable opens java.sql.Connection through java.sql.DriverManager then sets auto-commit and initializes schema; its catch currently only clears connection. Existing rollback disposal is correct and remains unchanged. A package-local connection-opening seam enables fault injection without changing the production path or adding a dependency.
+  - Existing DuelAnalyticsTransactionTest uses dev.minecraft.warzoneduels.WarzoneDuelsPlugin, org.bukkit.plugin.java.JavaPlugin, org.junit.jupiter.api.Test/assertions, java.lang.reflect.Field/Proxy/InvocationTargetException, sun.misc.Unsafe, java.sql.Connection/DriverManager and java.util.logging.Logger. H2 2.2.224 is the real database. New tests use existing org.junit.jupiter.api.io.TempDir and java.nio.file.Path plus java.sql.SQLException, java.util.concurrent.atomic.AtomicInteger, java.util.logging.Handler/LogRecord and existing DuelRecord/DuelRecordParticipant/DuelEndReason/DuelMatchType/UUID/List for retry and diagnostic evidence.
+
+  Validation: both focused assertions failed before the disposal fix and pass after it. Clean verify passes 145 Java tests against each pinned Paper profile (stable last), nine Node tests and EARS. Real H2 tests prove disposal, retry with persisted records and suppressed-close diagnostics; public JDBC construction and transaction handling remain unchanged. No live server acceptance, deployment or merge is claimed.
+
 - [x] **DOC-005** - Align architecture and completion gates with current project contracts.
   Tag: DOC
   References: REQ-025; docs/implementation.md layer dependency rules and SPEAR adoption.

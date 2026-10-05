@@ -30,6 +30,8 @@ Automated tests and a clean package build do not approve production deployment. 
 
 ## Current cooldown review delivery (2026-10-04)
 
+Analytics initialization follow-up (2026-10-05): two real-H2 failure-injection assertions first failed on leaked connections and missing throwable diagnostics, then passed after scoped disposal. `DuelAnalyticsInitializationTest` covers successful retry/persistence and a suppressed close error. Both clean pinned Paper builds pass 145 Java tests; nine Node tests and EARS pass. The package-local opener is test infrastructure, not a new runtime option. Existing rollback/caller-owned transaction semantics remain unchanged. Review/CI and actual server acceptance remain separate gates.
+
 The isolated review branch starts at fetched upstream main `480a365` and incorporates the existing team/admin/evidence work plus cooldown commit `9f2466a`, preserving the upstream regression suites. REQ-029 is covered by `DuelCooldownPolicyTest`, `DuelCooldownServiceTest`, `DuelCooldownAdmissionTest` and `DuelCooldownWiringTest`: UUID-pair history, independent configuration, party-member guards, exact expiry, restart persistence and fail-closed storage. The original 102-test result is historical evidence before the upstream tests were combined, not a claim for this review head.
 
 Historical reconciliation verification at `e006881` passed 123 Java tests against each pinned Paper API, then six independent Node tooling tests and EARS. Stable 26.2 verification ran last; logs are `docs/evidence/cooldown-review-26.3.log` and `cooldown-review-26.2.log`. Existing PR #1's 14 review threads were resolved and CodeRabbit succeeded at `4cae280`, but neither is fresh review approval of the subsequent upstream PR #21 head.
