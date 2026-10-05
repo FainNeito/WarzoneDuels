@@ -24,7 +24,7 @@ If already in `arch`, do not call `state_set_phase` again. Otherwise use `node t
 Parse the consumer project's `docs/implementation.md` section `## Layer Dependency Rules`. In WarzoneDuels, paths are relative to `src/main/java/dev/minecraft/warzoneduels/`; `app/**` is application and `adapter/**` is infrastructure. Apply the documented brownfield exceptions to unchanged coupling, never to new coupling. Three conceptual layers:
 
 - `domain/**` — may depend on nothing beyond itself + stdlib.
-- `application/**` — may depend only on `domain/**` + stdlib.
+- `application/**` — may depend only on `domain/**`, project `port/**` + stdlib.
 - `infrastructure/**` — unconstrained.
 
 Also parse `## Forbidden Domain Annotations` and extract the `forbidden: [...]` list.
@@ -37,8 +37,8 @@ Run `git diff --name-only` against the arch baseline (fall back to working tree)
 
 For every changed file, scan imports and apply its layer's rule:
 
-- `domain/**`: imports from `application/**` or `infrastructure/**` → FAIL `file:line:symbol`.
-- `application/**`: framework packages (anything outside `domain/**` + stdlib) → FAIL `file:line:symbol`.
+- `domain/**`: imports outside domain + stdlib, including application, ports, infrastructure, Bukkit, Paper or Adventure → FAIL `file:line:symbol`, except unchanged coupling explicitly recorded in the project's brownfield exceptions.
+- `application/**`: packages outside domain, project ports + stdlib → FAIL `file:line:symbol`, subject only to those documented existing-coupling exceptions.
 - `infrastructure/**`: allow.
 
 Collect all violations — do not early-exit.

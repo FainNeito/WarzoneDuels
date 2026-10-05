@@ -50,6 +50,8 @@ Do NOT proceed until the full suite is green.
 
 ### Step 6 — Mark task done and append Evidence
 
+Before changing completion status or clearing state, inspect `git diff --cached --name-only`. If any staged path is unrelated to this task, stop in `refine`, retaining `currentTaskId` and leaving the index untouched. Resolve the staging decision with the user and resume this same task; never clear its state first.
+
 In `docs/tasks.md`, locate the entry for `currentTaskId` and flip its checkbox:
 
 - `[~]` → `[x]`

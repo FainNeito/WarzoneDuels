@@ -1,5 +1,13 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **DOC-005** - Align architecture and completion gates with current project contracts.
+  Tag: DOC
+  References: REQ-025; docs/implementation.md layer dependency rules and SPEAR adoption.
+  Acceptance: application may use ports; changed domain imports reject frameworks; unrelated staged paths stop before task completion/state clear; verification history identifies exact source revisions and latest counts.
+  Evidence:
+  - Existing docs/implementation.md permits domain/port application dependencies and records brownfield exceptions. Current skill instructions and tools/spear/state.mjs define resumable refine state. Prior evidence is associated with e006881, a6b513c and bbd1aad, not relabeled as current approval.
+  Validation: documentation only; no behavior prove/engine or production imports apply. EARS, nine Node tests, clean stable Maven verify (143 Java tests) and diff checks pass; no unrelated staged paths exist. Actual runtime source verification for both API profiles remains separately identified at bbd1aad. No production change or review approval is claimed.
+
 - [x] **TDD-029** - Reject unsafe party spawns and explain offline roster cancellation.
   Tag: TDD
   References: REQ-038, REQ-039; docs/implementation.md match-execution.
