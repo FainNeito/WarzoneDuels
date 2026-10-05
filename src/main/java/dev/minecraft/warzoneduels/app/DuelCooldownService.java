@@ -17,6 +17,7 @@ public final class DuelCooldownService {
     private long playerWindow = 300_000;
     private long pairWindow = 86_400_000;
     private boolean healthy;
+    private boolean loaded;
 
     public DuelCooldownService(DuelCooldownStore store, LongSupplier clock, Consumer<String> warning) {
         this.store = store;
@@ -25,8 +26,10 @@ public final class DuelCooldownService {
     }
     public void enable() {
         healthy = false;
+        loaded = false;
         try {
             policy = new DuelCooldownPolicy(store.load());
+            loaded = true;
             store.save(policy.snapshot());
             healthy = true;
         } catch (IOException ex) { fail(ex); }
@@ -36,6 +39,16 @@ public final class DuelCooldownService {
         pairWindow = DuelCooldownPolicy.windowMillis(pairSeconds);
     }
     public boolean isHealthy() { return healthy; }
+    /** Retry repaired storage without discarding history whose write failed. */
+    public boolean recover() {
+        if (healthy) return true;
+        if (!loaded) {
+            enable();
+            return healthy;
+        }
+        healthy = persist();
+        return healthy;
+    }
     public boolean ensureWritable() { return healthy && persist(); }
     public DuelCooldownPolicy.Block block(List<UUID> first, List<UUID> second) {
         return policy.block(first, second, clock.getAsLong(), playerWindow, pairWindow);
@@ -51,6 +64,7 @@ public final class DuelCooldownService {
     }
     private boolean persist() {
         try {
+            policy.prune(clock.getAsLong(), playerWindow, pairWindow);
             store.save(policy.snapshot());
             return true;
         } catch (IOException ex) {

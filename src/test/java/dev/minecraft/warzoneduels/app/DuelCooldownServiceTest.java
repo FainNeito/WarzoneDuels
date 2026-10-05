@@ -15,6 +15,75 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DuelCooldownServiceTest {
+    private static boolean recover(DuelCooldownService service) throws Exception {
+        var method = assertDoesNotThrow(() -> service.getClass().getMethod("recover"),
+                                       "Admins need a safe storage recovery boundary");
+        return (boolean) method.invoke(service);
+    }
+
+    @Test void repairedWritePreservesUncommittedInMemoryHistory() throws Exception {
+        class Store implements DuelCooldownStore {
+            boolean fail;
+            int reads;
+            DuelCooldownPolicy.Snapshot saved = DuelCooldownPolicy.Snapshot.empty();
+            public DuelCooldownPolicy.Snapshot load() { reads++; return saved; }
+            public void save(DuelCooldownPolicy.Snapshot value) throws IOException {
+                if (fail) throw new IOException("locked");
+                saved = value;
+            }
+        }
+        var store = new Store();
+        var service = service(store);
+        store.fail = true;
+        assertFalse(service.recordCompletion(first, second));
+        assertFalse(recover(service));
+        store.fail = false;
+        assertTrue(recover(service));
+        assertEquals(1, store.reads, "Recovery must not discard the failed write by reloading disk");
+        assertNotNull(service.block(first, second));
+        assertFalse(store.saved.players().isEmpty());
+    }
+
+    @Test void repairedInitialReadRetriesLoadingBeforeUnblocking() throws Exception {
+        class Store implements DuelCooldownStore {
+            boolean fail = true;
+            public DuelCooldownPolicy.Snapshot load() throws IOException {
+                if (fail) throw new IOException("unreadable");
+                return new DuelCooldownPolicy.Snapshot(java.util.Map.of(first.getFirst(), 1000L),
+                                                       java.util.Map.of(), java.util.Map.of());
+            }
+            public void save(DuelCooldownPolicy.Snapshot value) { }
+        }
+        var store = new Store();
+        var service = service(store);
+        assertFalse(service.isHealthy());
+        store.fail = false;
+        assertTrue(recover(service));
+        assertNotNull(service.block(first, second));
+    }
+
+    @Test void persistencePrunesOnlyExpiredEnabledHistory() {
+        class Store implements DuelCooldownStore {
+            DuelCooldownPolicy.Snapshot saved = new DuelCooldownPolicy.Snapshot(
+                java.util.Map.of(first.getFirst(), 1000L, second.getFirst(), 5000L),
+                java.util.Map.of(DuelCooldownPolicy.pairKey(first.getFirst(), second.getFirst()), 1000L),
+                java.util.Map.of(DuelCooldownPolicy.pairKey(first.getFirst(), second.getFirst()), 1000L));
+            public DuelCooldownPolicy.Snapshot load() { return saved; }
+            public void save(DuelCooldownPolicy.Snapshot value) { saved = value; }
+        }
+        var store = new Store();
+        var service = service(store);
+        service.configure(0, 0);
+        clock.set(3000);
+        assertTrue(service.ensureWritable());
+        assertEquals(2, store.saved.players().size());
+        assertEquals(1, store.saved.opponents().size());
+        service.configure(1, 1);
+        assertTrue(service.ensureWritable());
+        assertEquals(java.util.Map.of(second.getFirst(), 5000L), store.saved.players());
+        assertTrue(store.saved.opponents().isEmpty());
+        assertTrue(store.saved.challenges().isEmpty());
+    }
     @TempDir Path directory;
     private final AtomicLong clock = new AtomicLong(1000);
     private final List<String> warnings = new ArrayList<>();

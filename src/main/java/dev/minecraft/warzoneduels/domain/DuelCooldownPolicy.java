@@ -73,6 +73,15 @@ public final class DuelCooldownPolicy {
 
     public Snapshot snapshot() { return new Snapshot(players, opponents, challenges); }
 
+    /** Disabled windows retain history; future timestamps remain protected. */
+    public void prune(long now, long playerWindow, long pairWindow) {
+        if (playerWindow > 0) players.values().removeIf(last -> remaining(last, now, playerWindow) == 0);
+        if (pairWindow > 0) {
+            opponents.values().removeIf(last -> remaining(last, now, pairWindow) == 0);
+            challenges.values().removeIf(last -> remaining(last, now, pairWindow) == 0);
+        }
+    }
+
     public static String pairKey(UUID first, UUID second) {
         if (first.equals(second)) throw new IllegalArgumentException("Opponents must differ");
         String a = first.toString(), b = second.toString();

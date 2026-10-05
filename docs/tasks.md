@@ -1,5 +1,14 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-026** - Recover repaired cooldown storage and prune expired enabled history.
+  Tag: TDD
+  References: REQ-035, REQ-036, REQ-029; docs/implementation.md persistence-and-recovery.
+  Acceptance: admin reload retries failed writes without replacing unpersisted in-memory evidence; initial read failure retries loading; failed recovery remains blocked; persistence prunes expired positive-window entries but preserves disabled-window and future timestamps.
+  Evidence:
+  - DuelCooldownService.enable/persist/isHealthy and DuelCooldownPolicy.snapshot/remaining own the existing fail-closed state and timestamp semantics; DuelService.reloadFromCommand is permission-gated to ADMIN_RELOAD.
+  - Existing DuelCooldownServiceTest uses dev.minecraft.warzoneduels.port.DuelCooldownStore, dev.minecraft.warzoneduels.domain.DuelCooldownPolicy, java.io.IOException, java.util.List/UUID/Map, java.util.concurrent.atomic.AtomicLong, org.junit.jupiter.api.Test and JUnit assertions for fault injection without Bukkit. Reflection on java.lang.Class.getMethod invokes the demanded recovery boundary without a compile-failure red.
+  Validation: three executable recovery/pruning assertions failed before implementation and pass afterward; 17 focused policy/service tests pass. Both pinned Paper profiles pass 134 Java tests, seven Node tooling tests and EARS pass. Failed recovery remains fail-closed; retry preserves unpersisted memory instead of replacing it from disk. Administrative reload uses the existing permission gate. Live filesystem repair/reload acceptance remains open; no production changes.
+
 - [x] **TDD-025** - Drain captured deaths before terminal and reload transitions.
   Tag: TDD
   References: REQ-034, REQ-017; docs/implementation.md match-execution and persistence-and-recovery.

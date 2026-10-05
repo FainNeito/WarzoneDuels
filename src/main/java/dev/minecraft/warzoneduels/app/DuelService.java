@@ -970,6 +970,9 @@ public final class DuelService {
         if (plugin.spoilsService() != null) {
             plugin.spoilsService().reloadConfig();
         }
+        if (!cooldownService.recover()) {
+            sendMessageRaw(sender, prefix + ChatColor.RED + "Cooldown storage remains unavailable; new duels remain blocked.");
+        }
         sendMessageRaw(sender, prefix + ChatColor.GREEN + "Config reloaded.");
     }
 

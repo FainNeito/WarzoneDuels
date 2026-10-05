@@ -2,6 +2,14 @@
 
 ## Safety and behavior
 
+### REQ-035 - Recover cooldown storage safely
+
+WHEN an administrator reloads configuration after repairing cooldown storage THE SYSTEM SHALL retry persisting retained in-memory history if load previously succeeded, otherwise retry the initial load, and unblock duels only after persistence succeeds.
+
+### REQ-036 - Bound enabled cooldown history
+
+WHEN cooldown history is persisted THE SYSTEM SHALL prune expired entries only for positive configured windows while retaining all history for disabled windows and all timestamps still protected by backward clock movement.
+
 ### REQ-034 - Resolve captured deaths before lifecycle transitions
 
 WHEN a duel concludes or the plugin disables with captured pending deaths THE SYSTEM SHALL resolve the existing death batch before marking the duel ended or persisting reload state, preserve its existing spoils and simultaneous-elimination policy, and cancel its scheduled callback to avoid duplicate resolution.
