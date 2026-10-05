@@ -1,5 +1,14 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-028** - Separate ordinary match results from durable advancement evidence.
+  Tag: TDD
+  References: REQ-037, REQ-029; docs/implementation.md persistence-and-recovery.
+  Acceptance: cooldown failure retains ordinary win/loss/draw counters; specialized evidence requires durable cooldown storage; existing result API remains compatible; terminal cleanup/loot stays outside the storage gate.
+  Evidence:
+  - StatsService.recordMatchResult and PlayerDuelStats record ordinary and specialized counters; DuelService.concludeDuel currently gates both on cooldownService.recordCompletion. Existing ActiveDuel, DuelSettings, DuelMatchType, DuelEndReason, MatchParticipant and MatchTeam define the result input.
+  - Existing org.junit.jupiter.api.Test/JUnit assertions, java.nio.file.Files/Path, java.util.List/Map/UUID and java.util.function.Consumer support a constructor-free Bukkit-independent persistence sink and direct service tests. Reflective boundary lookup avoids compile-failure red; the package-local sink is testability infrastructure, not a new runtime persistence profile.
+  Validation: all four focused assertions failed before the flag-bearing result boundary and pass after implementation. Three tests execute result accounting through a package-local persistence sink; one checks terminal adapter wiring. Both pinned Paper profiles pass 138 Java tests, nine Node tests and EARS pass. Existing public three-argument API delegates with evidence enabled; the production constructor still uses PlayerStatsStore.saveAsync. No database or live Paper loot/cleanup acceptance is claimed.
+
 - [x] **TDD-027** - Preserve validator imports and require identified test evidence.
   Tag: TDD
   References: REQ-025; docs/implementation.md SPEAR adoption.

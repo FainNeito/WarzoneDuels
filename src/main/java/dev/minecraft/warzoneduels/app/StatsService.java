@@ -19,13 +19,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public final class StatsService {
     private final PlayerStatsStore store;
+    private final Consumer<Map<UUID, PlayerDuelStats>> saveSink;
     private final Map<UUID, PlayerDuelStats> statsByPlayerId = new ConcurrentHashMap<>();
 
     public StatsService(PlayerStatsStore store) {
         this.store = store;
+        this.saveSink = store::saveAsync;
+    }
+
+    StatsService(Consumer<Map<UUID, PlayerDuelStats>> saveSink) {
+        this.store = null;
+        this.saveSink = java.util.Objects.requireNonNull(saveSink);
     }
 
     public void enable() {
@@ -39,6 +47,10 @@ public final class StatsService {
     }
 
     public void recordMatchResult(ActiveDuel duel, UUID winnerId, DuelEndReason reason) {
+        recordMatchResult(duel, winnerId, reason, true);
+    }
+
+    public void recordMatchResult(ActiveDuel duel, UUID winnerId, DuelEndReason reason, boolean advancementEvidenceAllowed) {
         if (duel == null) {
             return;
         }
@@ -54,7 +66,7 @@ public final class StatsService {
         }
 
         TeamOutcomePolicy.Outcome outcome = TeamOutcomePolicy.outcome(duel, winnerId);
-        boolean restrictedMobility = DuelAdvancementPolicy.isRestrictedMobilityWin(duel.settings(), reason);
+        boolean restrictedMobility = advancementEvidenceAllowed && DuelAdvancementPolicy.isRestrictedMobilityWin(duel.settings(), reason);
         for (MatchParticipant winner : outcome.winners()) {
             PlayerDuelStats winnerStats = stats(winner.playerId(), winner.name());
             winnerStats.recordWin();
@@ -67,13 +79,13 @@ public final class StatsService {
         }
 
         MatchParticipant challenger = duel.participantOne();
-        if (DuelAdvancementPolicy.isCustomRulesChallengerWin(
+        if (advancementEvidenceAllowed && DuelAdvancementPolicy.isCustomRulesChallengerWin(
             duel.matchType(), challenger.playerId(), winnerId, duel.settings(), reason
         )) {
             stats(challenger.playerId(), challenger.name()).recordCustomRulesWin();
         }
 
-        if (duel.matchType() == DuelMatchType.NORMAL && reason == DuelEndReason.KILL) {
+        if (advancementEvidenceAllowed && duel.matchType() == DuelMatchType.NORMAL && reason == DuelEndReason.KILL) {
             Player onlineWinner = Bukkit.getPlayer(winnerId);
             if (onlineWinner != null
                 && DuelAdvancementPolicy.isLowHealthWin(duel.matchType(), reason, onlineWinner.getHealth())) {
@@ -170,6 +182,6 @@ public final class StatsService {
     }
 
     private void save() {
-        store.saveAsync(statsByPlayerId);
+        saveSink.accept(statsByPlayerId);
     }
 }

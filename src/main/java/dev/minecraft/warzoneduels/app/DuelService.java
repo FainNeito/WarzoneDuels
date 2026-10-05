@@ -2193,15 +2193,16 @@ public final class DuelService {
         duelAnalyticsService.recordDuel(finishedDuel, winnerId, reason);
         boolean normalResult = reason == DuelEndReason.KILL || reason == DuelEndReason.DRAW
             || reason == DuelEndReason.DISCONNECT_TIMEOUT;
-        if (normalResult && cooldownService.recordCompletion(rosterIds(finishedDuel.teamOne()), rosterIds(finishedDuel.teamTwo()))) {
-            if (reason == DuelEndReason.DRAW && TeamMatchPolicy.allSurvivorsRequestedDraw(finishedDuel, eliminatedParticipantIds)) {
+        if (normalResult) {
+            boolean durableCooldown = cooldownService.recordCompletion(rosterIds(finishedDuel.teamOne()), rosterIds(finishedDuel.teamTwo()));
+            if (durableCooldown && reason == DuelEndReason.DRAW && TeamMatchPolicy.allSurvivorsRequestedDraw(finishedDuel, eliminatedParticipantIds)) {
                 for (MatchParticipant participant : finishedDuel.participants()) {
                     if (!eliminatedParticipantIds.contains(participant.playerId())) {
                         statsService.recordMutualDraw(participant.playerId(), participant.name());
                     }
                 }
             }
-            statsService.recordMatchResult(finishedDuel, winnerId, reason);
+            statsService.recordMatchResult(finishedDuel, winnerId, reason, durableCooldown);
         }
         runtimeStateStore.clearRuntime();
 

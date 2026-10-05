@@ -2,6 +2,10 @@
 
 ## Safety and behavior
 
+### REQ-037 - Match finalization after cooldown failure
+
+IF completed-match cooldown persistence fails THEN THE SYSTEM SHALL preserve ordinary wins, losses and draws while withholding new specialized advancement evidence, completing recovery, cleanup and loot distribution, and keeping new duels blocked until storage recovers.
+
 ### REQ-035 - Recover cooldown storage safely
 
 WHEN an administrator reloads configuration after repairing cooldown storage THE SYSTEM SHALL retry persisting retained in-memory history if load previously succeeded, otherwise retry the initial load, and unblock duels only after persistence succeeds.
