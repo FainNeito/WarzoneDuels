@@ -228,6 +228,7 @@ public final class DuelService {
     }
 
     public void disable(boolean serverStopping) {
+        flushPendingDeathsBeforeTransition();
         spectatorManager.disable(serverStopping ? "server-shutdown" : "plugin-disable");
         cancelRequestExpiryTask();
         cancelDisconnectMonitorTask();
@@ -1216,6 +1217,13 @@ public final class DuelService {
         return opposingTeam != null && opposingTeam.contains(attributedId) ? attributedId : null;
     }
 
+    private void flushPendingDeathsBeforeTransition() {
+        if (!pendingDeaths.isEmpty() && activeDuel != null && !duelEnding) {
+            cancelDeathResolutionTask();
+            resolvePendingDeaths();
+        }
+    }
+
     private void resolvePendingDeaths() {
         requirePrimaryThread();
         deathResolutionTask = null;
@@ -2151,6 +2159,10 @@ public final class DuelService {
         boolean broadcastOutcome
     ) {
         requirePrimaryThread();
+        if (activeDuel == null || duelEnding) {
+            return;
+        }
+        flushPendingDeathsBeforeTransition();
         if (activeDuel == null || duelEnding) {
             return;
         }

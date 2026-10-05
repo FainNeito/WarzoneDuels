@@ -1,5 +1,14 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-025** - Drain captured deaths before terminal and reload transitions.
+  Tag: TDD
+  References: REQ-034, REQ-017; docs/implementation.md match-execution and persistence-and-recovery.
+  Acceptance: disable resolves the pending death batch before cancelling tasks/saving reload state; terminal transitions resolve before duelEnding and stop if resolution already concluded; scheduled resolution is cancelled before synchronous execution; existing spoils/draw policy stays authoritative.
+  Evidence:
+  - DuelService.handleDeath captures drops in pendingDeaths; resolvePendingDeaths creates spoils or preserves archived loads for simultaneous elimination. disable cancels deathResolutionTask then persists only elimination UUIDs; concludeDuel sets duelEnding before cleanup clears pendingDeaths.
+  - Existing org.junit.jupiter.api.Test, java.nio.file.Files/Path and JUnit assertions in ExplosiveTeamCombatPolicyTest support adapter ordering contracts. These checks establish source wiring, not end-to-end Paper scheduler or inventory acceptance; existing TeamMatchPolicy tests exercise batch outcomes.
+  Validation: after normalizing CRLF in the test fixture, all three source-order assertions failed before implementation and pass after the shared drain. Both pinned Paper profiles pass 131 Java tests; seven Node tests and EARS pass. No new production imports or domain coupling. Source wiring and existing domain batch tests are not end-to-end Paper inventory/reload acceptance. No production changes.
+
 - [x] **TDD-024** - Preserve eliminated party members through runtime persistence and reload.
   Tag: TDD
   References: REQ-033; docs/implementation.md persistence-and-recovery and match-execution.

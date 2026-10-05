@@ -1,5 +1,11 @@
 # WarzoneDuels requirements
 
+## Safety and behavior
+
+### REQ-034 - Resolve captured deaths before lifecycle transitions
+
+WHEN a duel concludes or the plugin disables with captured pending deaths THE SYSTEM SHALL resolve the existing death batch before marking the duel ended or persisting reload state, preserve its existing spoils and simultaneous-elimination policy, and cancel its scheduled callback to avoid duplicate resolution.
+
 ### REQ-033 - Preserve eliminated party participants on reload
 
 WHEN an active duel is saved and resumed after a plugin reload THE SYSTEM SHALL persist and restore eliminated roster UUIDs before rebuilding the participant index, exclude eliminated players from recovery teleports, and interpret legacy saves without elimination data as having no eliminated players.
