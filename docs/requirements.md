@@ -136,6 +136,8 @@ IF a match contains multiple participants per team and its type is not PARTY THE
 
 WHEN SPEAR tooling validates requirements or changes phase THE SYSTEM SHALL reject missing requirement clauses and malformed state, replace state through a same-directory temporary file, and preserve the prior state if replacement fails.
 
+WHEN SPEAR tooling is imported without a CLI argument THE SYSTEM SHALL expose its validator without executing the CLI, and SHALL reject test records whose file, name or status is missing or invalid without changing stored state.
+
 ### REQ-026 - Advancement evidence counters
 
 WHEN a valid duel challenge is sent, captured spoils are withdrawn, all surviving participants agree to a draw, or a duel winner satisfies an approved ruleset or low-health condition THE SYSTEM SHALL persist the corresponding per-player advancement evidence counter in stats.yml without changing ordinary match statistics.

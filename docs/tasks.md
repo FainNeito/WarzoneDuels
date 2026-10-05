@@ -1,5 +1,13 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-027** - Preserve validator imports and require identified test evidence.
+  Tag: TDD
+  References: REQ-025; docs/implementation.md SPEAR adoption.
+  Acceptance: importing the EARS validator from node -e works; empty test file/name and invalid status are rejected before state writes; valid identified red/green records still work.
+  Evidence:
+  - Existing tools/spear/tooling.test.mjs uses node:test, node:assert/strict, node:fs, node:os, node:path, node:url and node:child_process for actual process and state-file checks. Existing state.mjs owns phase/test gates and ears.mjs owns validator CLI routing.
+  Validation: both new process/state assertions failed on the original helpers and pass after the guards. Nine Node tests, EARS, clean stable Maven verify (134 Java tests) and diff checks pass. No gameplay imports or source changed; state remains untouched on rejected evidence.
+
 - [x] **DOC-004** - Correct reviewed SPEAR routing and historical planning guidance.
   Tag: DOC
   References: REQ-025; docs/implementation.md SPEAR adoption.

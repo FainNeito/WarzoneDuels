@@ -47,6 +47,9 @@ case 'state_set_phase':
   save({...state,phase:args[0]}); break;
 case 'state_record_test':
   if(!['prove','engine'].includes(state.phase)) throw Error('Tests can only be recorded in prove/engine');
+  if(!args[0]?.trim() || !args[1]?.trim() || !['red','green'].includes(args[2])) {
+    throw Error('Test evidence requires nonempty file/name and red or green status');
+  }
   save({...state,testFile:args[0],testName:args[1],testStatus:args[2]}); break;
 case 'state_task':
   if(state.phase!=='idle') throw Error('Select a task only while idle');

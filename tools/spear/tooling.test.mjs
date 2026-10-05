@@ -9,6 +9,23 @@ import { validate } from './ears.mjs';
 
 const stateScript = fileURLToPath(new URL('./state.mjs', import.meta.url));
 
+test('validator imports from evaluation without CLI arguments', () => {
+  const url = new URL('./ears.mjs', import.meta.url).href;
+  const result = spawnSync(process.execPath, ['--input-type=module', '-e',
+    `const {validate} = await import(${JSON.stringify(url)}); if (!validate('### REQ-001 - Test\\nTHE SYSTEM SHALL work.', 'test.md').ok) throw Error('validation failed');`], {encoding:'utf8'});
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('test evidence rejects blank identifiers and invalid status without writes', t => {
+  for (const args of [['', 'test', 'red'], ['file', ' ', 'red'], ['file', 'test', 'unknown']]) {
+    const previous = '{"version":1,"phase":"prove"}';
+    const f = fixture(t, previous);
+    const result = spawnSync(process.execPath, [stateScript, 'state_record_test', ...args], {env:f.env,encoding:'utf8'});
+    assert.notEqual(result.status, 0);
+    assert.equal(fs.readFileSync(f.file, 'utf8'), previous);
+  }
+});
+
 test('missing clauses are rejected at the next header and EOF', () => {
   const result = validate('### REQ-001 - Missing\n### REQ-002 - Valid\nTHE SYSTEM SHALL work.\n### REQ-003 - Missing\n', 'test.md');
   assert.equal(result.ok, false);

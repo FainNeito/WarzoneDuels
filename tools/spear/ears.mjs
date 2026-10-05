@@ -110,7 +110,7 @@ export function validate(text, filename) {
  * Exit 0 on success, 1 on validation failure.
  * Print errors to stderr in format: filename:line: REQ-XXX: reason
  */
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1].endsWith('ears.mjs')) {
+if (process.argv[1] && (import.meta.url === `file://${process.argv[1]}` || process.argv[1].endsWith('ears.mjs'))) {
   const filename = process.argv[2];
 
   if (!filename) {
