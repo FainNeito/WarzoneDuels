@@ -170,3 +170,13 @@ Use disposable accounts on staging. Temporarily set `settings.duel-cooldown-seco
 7. Run normal exit, disconnect, reload, and clean shutdown restoration checks.
 8. Run crash recovery checks on a disposable copy of the server.
 9. Grant `warzoneduels.command` and `warzoneduels.spectate` to the intended public group only after every live-server check passes.
+
+## Duel blocks (REQ-034)
+
+1. Player A runs `/duel block B`; `/duel blocked` lists B. Restart the server; the block is still listed.
+2. B tries `/duel A`: refused with "You can't duel or party with that player." A tries `/duel B`: refused the same way.
+3. With A and B leading or belonging to different Duel Parties, a party challenge between them is refused.
+4. B (as a party leader) runs `/duel party invite A`, and A's party leader invites B: both refused.
+5. A runs `/duel unblock B`; challenges and invites work again.
+6. Make `duel-blocks.yml` unreadable (invalid YAML) and restart: new challenges and invites are refused with the "paused" message and a warning is logged; fix the file and restart to recover.
+7. With EnthusiaFriends installed, Block Everywhere on B adds the duel block, and Friends unblock removes it.

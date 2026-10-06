@@ -1,5 +1,15 @@
 # WarzoneDuels requirements
 
+### REQ-034 - Personal duel blocks
+
+WHEN a player runs /duel block, /duel unblock or /duel blocked with warzoneduels.command.block THE SYSTEM SHALL add, remove or list that player's blocked UUIDs, refuse self-blocks, and persist each change in duel-blocks.yml through a same-directory temporary file before confirming it.
+
+IF either player in a one-versus-one challenge, any cross-team pair in a party challenge, or an invitee and any member of the inviting party blocks the other THEN THE SYSTEM SHALL refuse the challenge builder, the sent request, the party challenge or the party invitation without telling the sender which player set the block.
+
+IF the duel block file cannot be read or written safely THEN THE SYSTEM SHALL refuse new challenges and party invitations rather than treat the block list as empty.
+
+THE SYSTEM SHALL register a main-thread DuelBlockApi with Bukkit's ServicesManager that checks and sets the same blocks for other plugins without permission checks or player messages, and SHALL NOT affect matches already accepted or running.
+
 ### REQ-033 - Preserve eliminated party participants on reload
 
 WHEN an active duel is saved and resumed after a plugin reload THE SYSTEM SHALL persist and restore eliminated roster UUIDs before rebuilding the participant index, exclude eliminated players from recovery teleports, and interpret legacy saves without elimination data as having no eliminated players.
