@@ -67,6 +67,16 @@ To start a team match, both party leaders must be online with equally sized rost
 
 Team matches disable friendly fire and end only when every member of one team has been eliminated. A death or disconnect timeout removes that player while surviving teammates continue. A draw requires every surviving participant to request it. Party wagers are currently disabled while a fair team stake/payout policy is deferred.
 
+## Blocking players from duels
+
+```text
+/duel block <player>
+/duel unblock <player>
+/duel blocked
+```
+
+Blocking someone stops duel challenges and Duel Party invites between you, in both directions: they can't challenge or invite you, and you can't challenge or invite them until you unblock them. In party duels, the challenge is refused if any player on one team has blocked any player on the other. The other player is only told that the duel isn't possible, not who blocked whom. Blocks are saved immediately and stay after restarts; you can block someone who has joined before even if they are offline. Duels that are already accepted or running are not affected. If EnthusiaFriends is installed, its Block Everywhere button sets the same duel block.
+
 ## Duel setup flow
 
 The challenger can configure the following before sending the request.

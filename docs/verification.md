@@ -41,3 +41,7 @@ Production delivery requires reviewed/merged source on the confirmed canonical m
 Latest review-fix baseline: 70 Java tests pass on each pinned Paper API (`review-final-26.2.log`, `review-final-26.3.log`), and six Node tooling tests pass. The stable build produces `target/WarzoneDuels-1.0.3.jar`. The 62-test result below is historical 1.0.2 evidence, not the latest count.
 
 1.0.2 regression evidence: `PlaytestRegressionTest` executes all six DuelService spawn lookups against ArenaDefinition, checks complete-party victory labels, leader disband/index/invitation cleanup, and explosive self-versus-teammate damage (REQ-019 through REQ-021). Both pinned Paper API builds pass 62 tests. Live countdown, arrival, leader logout notification, and self-explosion checks remain in MANUAL_TESTING.md.
+
+## Duel blocks (REQ-034, 2026-10-06)
+
+Requested by the server owner so EnthusiaFriends' Block Everywhere can cover duel challenges. New framework-free `DuelBlockList` (domain), `DuelBlockStore` port, `DuelBlockService` and `DuelBlockApiService` (app), `YamlDuelBlockStore` (adapter) and public `DuelBlockApi`. Red evidence: docs/evidence/duel-blocks-red.log (12 failing). Green: 140 Java tests on each pinned Paper API (duel-blocks-26.3-verify.log ran first, duel-blocks-26.2-verify.log last and produced WarzoneDuels-1.0.5.jar), seven Node tooling tests and EARS. Not verified: live Paper behavior of the commands, refusal messages, party flows, restart persistence and the EnthusiaFriends connection; see MANUAL_TESTING.md. No deployment or merge is implied.

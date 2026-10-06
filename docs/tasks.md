@@ -1,5 +1,16 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-025** - Let players block duel challenges and party invitations from specific players.
+  Tag: TDD
+  References: REQ-034; docs/implementation.md persistence-and-recovery; EnthusiaFriends docs/integrations.md (Block Everywhere).
+  Acceptance: /duel block, unblock and blocked manage a persisted per-player UUID list; a block in either direction refuses challenge builders, sent requests, party challenges (any cross-team pair) and party invitations without revealing who blocked; unreadable or unwritable block storage refuses new challenges and invitations; DuelBlockApi lets EnthusiaFriends check and set the same blocks on the main thread; accepted and running matches are unaffected.
+  Evidence:
+  - DuelService.startBuilder/rejectBuilderStart, sendRequest/rejectRequestPlayers and sendPartyRequest/rejectPartyRoster are the existing admission boundaries; DuelCommand.inviteToParty is the only party invitation entry point.
+  - DuelCooldownService/YamlDuelCooldownStore/DuelCooldownStore show the existing fail-closed, atomically replaced YAML persistence pattern to follow.
+  - PermissionPolicy and plugin.yml own command permissions; WarzoneDuelsPlugin wires services and already reads Bukkit's ServicesManager.
+  - No personal block exists today: players can only accept or deny each challenge.
+  Validation: with empty stubs, all 12 new tests failed on the missing behavior (docs/evidence/duel-blocks-red.log): domain, service, YAML store and API tests on UnsupportedOperationException, the wiring test on missing guards and permission mapping. DuelBlockList, DuelBlockService, YamlDuelBlockStore and DuelBlockApiService then passed 10/10; wiring into DuelService admission, DuelCommand (block/unblock/blocked, invitation check), PermissionPolicy, plugin.yml and ServicesManager registration made the remaining two pass. Clean verify passes 140 Java tests on the pinned 26.3 and then 26.2 profiles (duel-blocks-26.3-verify.log, duel-blocks-26.2-verify.log) and packages target/WarzoneDuels-1.0.5.jar; seven Node tooling tests and EARS pass. Wiring coverage is source-contract, not a live Paper test; MANUAL_TESTING.md lists the in-game checks.
+
 - [x] **TDD-024** - Preserve eliminated party members through runtime persistence and reload.
   Tag: TDD
   References: REQ-033; docs/implementation.md persistence-and-recovery and match-execution.

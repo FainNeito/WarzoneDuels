@@ -168,6 +168,7 @@ public final class DuelService {
     private BukkitTask victoryTask;
     private boolean duelCountdownActive;
     private boolean duelEnding;
+    private DuelBlockService blockService;
 
     public DuelService(
         WarzoneDuelsPlugin plugin,
@@ -209,6 +210,37 @@ public final class DuelService {
         this.challengeService = challengeService;
         this.cooldownService = java.util.Objects.requireNonNull(cooldownService, "cooldownService");
         this.combatTagPort = combatTagPort;
+    }
+
+    /** Personal duel blocks (REQ-034); without a block service no blocks apply. */
+    public void setBlockService(DuelBlockService blockService) {
+        this.blockService = blockService;
+    }
+
+    /**
+     * Refuses a duel or party pairing when any player on one side blocks any player on the other, or when blocks
+     * cannot be read. The message never says which player set the block.
+     */
+    private boolean rejectDuelBlock(java.util.Collection<UUID> first, java.util.Collection<UUID> second, Player notify) {
+        if (blockService == null || blockService.allows(first, second)) {
+            return false;
+        }
+        sendMessageRaw(notify, prefix + ChatColor.RED + (blockService.isHealthy()
+            ? "You can't duel or party with that player."
+            : "Duel blocks are unavailable right now, so new duels and party invites are paused."));
+        return true;
+    }
+
+    public DuelBlockService blockService() {
+        return blockService;
+    }
+
+    /** Party invitations are refused when the invitee and any member of the inviting party block each other. */
+    public boolean allowsPartyInvite(Player leader, Player invitee) {
+        List<UUID> members = partyService.partyOf(leader.getUniqueId())
+            .map(party -> party.members().stream().map(DuelParty.DuelPartyMember::playerId).toList())
+            .orElse(List.of(leader.getUniqueId()));
+        return !rejectDuelBlock(members, List.of(invitee.getUniqueId()), leader);
     }
 
     public void setCombatTagPort(CombatTagPort combatTagPort) {
@@ -432,6 +464,7 @@ public final class DuelService {
     private boolean rejectBuilderStart(Player sender, Player target) {
         return rejectUnavailableBuilder(sender)
             || rejectInvalidBuilderPlayers(sender, target)
+            || rejectDuelBlock(List.of(sender.getUniqueId()), List.of(target.getUniqueId()), sender)
             || rejectCombatTaggedBuilder(sender, target)
             || rejectBusyBuilderPlayers(sender, target);
     }
@@ -597,6 +630,9 @@ public final class DuelService {
         if (rejectCooldown(challenge.challengerTeam(), challenge.opponentTeam(), List.of(requester))) {
             return true;
         }
+        if (rejectDuelBlock(rosterIds(challenge.challengerTeam()), rosterIds(challenge.opponentTeam()), requester)) {
+            return true;
+        }
         List<Player> participants = onlinePartyParticipants(challenge);
         if (participants == null) {
             sendMessage(requester, MSG_TARGET_OFFLINE);
@@ -627,6 +663,9 @@ public final class DuelService {
 
     private boolean rejectRequestPlayers(Player requester, Player target) {
         if (rejectCooldown(requester, target)) {
+            return true;
+        }
+        if (rejectDuelBlock(List.of(requester.getUniqueId()), List.of(target.getUniqueId()), requester)) {
             return true;
         }
         if (isCombatTagged(requester)) {
