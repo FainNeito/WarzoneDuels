@@ -72,6 +72,16 @@
   - Existing org.junit.jupiter.api.Test, java.nio.file.Files/Path and JUnit assertions in ExplosiveTeamCombatPolicyTest support adapter ordering contracts. These checks establish source wiring, not end-to-end Paper scheduler or inventory acceptance; existing TeamMatchPolicy tests exercise batch outcomes.
   Validation: after normalizing CRLF in the test fixture, all three source-order assertions failed before implementation and pass after the shared drain. Both pinned Paper profiles pass 131 Java tests; seven Node tests and EARS pass. No new production imports or domain coupling. Source wiring and existing domain batch tests are not end-to-end Paper inventory/reload acceptance. No production changes.
 
+- [x] **TDD-032** - Close duel block gaps found in code review.
+  Tag: TDD
+  References: REQ-041 (amended); TDD-031.
+  Acceptance: a failed save fails only that change and leaves duels running; an unreadable block file is retried on /duel reload; accepting a pending 1v1 request or a party invitation re-checks blocks; duel command name suggestions hide players the sender cannot see.
+  Evidence:
+  - DuelBlockService.set marked storage unhealthy on any save failure with no recovery, pausing all duels until restart.
+  - DuelService.rejectAcceptedRequest (confirmAcceptRequest) and DuelCommand.acceptPartyInvite did not consult duel blocks, so a block added after a request or invitation was sent did not stop it.
+  - DuelCommand.addOnlinePlayerCompletions listed every online player, including vanished staff.
+  Validation: the new service and wiring tests failed first on the missing behavior (docs/evidence/duel-block-review-red.log); after the fix, clean verify passes 142 Java tests on the pinned 26.3 and then 26.2 profiles (duel-block-review-26.3-verify.log, duel-block-review-26.2-verify.log), seven Node tooling tests and EARS. The party-acceptance check notifies the accepting player. Wiring coverage is source-contract; MANUAL_TESTING.md lists the live checks.
+
 - [x] **TDD-031** - Let players block duel challenges and party invitations from specific players.
   Tag: TDD
   References: REQ-041; docs/implementation.md persistence-and-recovery; EnthusiaFriends docs/integrations.md (Block Everywhere).

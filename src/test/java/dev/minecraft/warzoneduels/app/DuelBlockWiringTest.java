@@ -35,4 +35,15 @@ class DuelBlockWiringTest {
         assertTrue(plugin.getBoolean("permissions.warzoneduels.command.children." + PermissionPolicy.BLOCK));
         assertNotNull(plugin.get("permissions." + PermissionPolicy.BLOCK));
     }
+
+    @Test void acceptanceReloadAndSuggestionsRespectBlocks() throws Exception {
+        String service = Files.readString(Path.of("src/main/java/dev/minecraft/warzoneduels/app/DuelService.java")).replace("\r\n", "\n");
+        assertTrue(body(service, "private boolean rejectAcceptedRequest(").contains("rejectDuelBlock"), "Accepting a request re-checks blocks");
+        assertTrue(body(service, "public void reloadConfig(").contains("blockService"), "Reload retries unreadable block storage");
+        String command = Files.readString(Path.of("src/main/java/dev/minecraft/warzoneduels/adapter/bukkit/command/DuelCommand.java")).replace("\r\n", "\n");
+        String accept = body(command, "private void acceptPartyInvite(");
+        assertTrue(accept.contains("allowsPartyJoin") && accept.indexOf("allowsPartyJoin") < accept.indexOf("partyService.acceptInvite("),
+            "Accepting a party invitation re-checks blocks before joining");
+        assertTrue(body(command, "private void addOnlinePlayerCompletions(").contains("canSee"), "Suggestions hide players the sender cannot see");
+    }
 }

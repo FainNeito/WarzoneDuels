@@ -34,9 +34,13 @@ WHEN a duel concludes or the plugin disables with captured pending deaths THE SY
 
 WHEN a player runs /duel block, /duel unblock or /duel blocked with warzoneduels.command.block THE SYSTEM SHALL add, remove or list that player's blocked UUIDs, refuse self-blocks, and persist each change in duel-blocks.yml through a same-directory temporary file before confirming it.
 
-IF either player in a one-versus-one challenge, any cross-team pair in a party challenge, or an invitee and any member of the inviting party blocks the other THEN THE SYSTEM SHALL refuse the challenge builder, the sent request, the party challenge or the party invitation without telling the sender which player set the block.
+IF either player in a one-versus-one challenge, any cross-team pair in a party challenge, or an invitee and any member of the inviting party blocks the other THEN THE SYSTEM SHALL refuse the challenge builder, the sent request, the acceptance of a pending request, the party challenge, the party invitation or the acceptance of a party invitation without telling the sender which player set the block.
 
-IF the duel block file cannot be read or written safely THEN THE SYSTEM SHALL refuse new challenges and party invitations rather than treat the block list as empty.
+IF the duel block file cannot be read THEN THE SYSTEM SHALL refuse new challenges and party invitations rather than treat the block list as empty, and SHALL retry reading it on /duel reload.
+
+IF a block change cannot be saved THEN THE SYSTEM SHALL report that change as failed and keep the previous block list in effect without pausing other duels.
+
+WHEN the system suggests player names for duel commands THE SYSTEM SHALL suggest only players the sender can see.
 
 THE SYSTEM SHALL register a main-thread DuelBlockApi with Bukkit's ServicesManager that checks and sets the same blocks for other plugins without permission checks or player messages, and SHALL NOT affect matches already accepted or running.
 

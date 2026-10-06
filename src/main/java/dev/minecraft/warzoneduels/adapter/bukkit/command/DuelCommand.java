@@ -247,7 +247,9 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
     private void addOnlinePlayerCompletions(CommandSender sender, List<String> result, String typed) {
         sender.getServer().getOnlinePlayers().forEach(player -> {
             String name = player.getName();
-            if (matchesTyped(name.toLowerCase(Locale.ROOT), typed)) {
+            // Never reveal vanished players through suggestions.
+            boolean visible = !(sender instanceof Player viewer) || viewer.canSee(player);
+            if (visible && matchesTyped(name.toLowerCase(Locale.ROOT), typed)) {
                 result.add(name);
             }
         });
@@ -369,6 +371,10 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
 
     private void acceptPartyInvite(Player player, String[] args) {
         DuelParty party = requireInvitingParty(player, args, "accept");
+        // Blocks added after the invitation was sent, including by members who joined since, still apply.
+        if (!duelService.allowsPartyJoin(party, player)) {
+            return;
+        }
         partyService.acceptInvite(player.getUniqueId(), party.id(), System.currentTimeMillis());
         notifyParty(party, ChatColor.GREEN + player.getName() + " joined the Duel Party.");
     }
