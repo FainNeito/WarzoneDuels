@@ -57,14 +57,29 @@ class DuelBlockServiceTest {
         assertFalse(warnings.isEmpty());
     }
 
-    @Test void aFailedWriteIsNotKeptInMemoryAndRefusesNewChallenges() {
+    @Test void aFailedWriteFailsOnlyThatChangeAndKeepsDuelsRunning() {
         var store = new MemoryStore();
         var service = new DuelBlockService(store, warnings::add);
         service.enable();
         store.failSave = true;
         assertEquals(DuelBlockService.Change.FAILED, service.set(alex, blair, true));
         assertFalse(service.isBlocked(alex, blair), "An unsaved block must not look saved");
-        assertFalse(service.allows(List.of(alex), List.of(blair)), "Storage is unhealthy after a failed write");
+        assertTrue(service.isHealthy(), "One failed save must not pause every duel");
+        assertTrue(service.allows(List.of(alex), List.of(blair)));
+        store.failSave = false;
+        assertEquals(DuelBlockService.Change.CHANGED, service.set(alex, blair, true), "The next change saves normally");
+    }
+
+    @Test void unreadableStorageRecoversWhenEnabledAgain() {
+        var store = new MemoryStore();
+        store.failLoad = true;
+        var service = new DuelBlockService(store, warnings::add);
+        service.enable();
+        assertFalse(service.isHealthy());
+        store.failLoad = false;
+        service.enable();
+        assertTrue(service.isHealthy(), "Reload retries reading the block file");
+        assertTrue(service.allows(List.of(alex), List.of(blair)));
     }
 
     @Test void apiRequiresTheMainThreadAndRefusesSelfBlocks() {

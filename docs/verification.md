@@ -45,3 +45,7 @@ Latest review-fix baseline: 70 Java tests pass on each pinned Paper API (`review
 ## Duel blocks (REQ-034, 2026-10-06)
 
 Requested by the server owner so EnthusiaFriends' Block Everywhere can cover duel challenges. New framework-free `DuelBlockList` (domain), `DuelBlockStore` port, `DuelBlockService` and `DuelBlockApiService` (app), `YamlDuelBlockStore` (adapter) and public `DuelBlockApi`. Red evidence: docs/evidence/duel-blocks-red.log (12 failing). Green: 140 Java tests on each pinned Paper API (duel-blocks-26.3-verify.log ran first, duel-blocks-26.2-verify.log last and produced WarzoneDuels-1.0.5.jar), seven Node tooling tests and EARS. Not verified: live Paper behavior of the commands, refusal messages, party flows, restart persistence and the EnthusiaFriends connection; see MANUAL_TESTING.md. No deployment or merge is implied.
+
+## Duel block review fixes (REQ-034 amended, TDD-026, 2026-10-06)
+
+A code review of the merged duel blocks found four gaps, now fixed: a single failed save no longer pauses all duels (that change fails and the previous list stays in effect), /duel reload retries an unreadable block file, accepting a pending 1v1 request or a Duel Party invitation re-checks blocks, and duel name suggestions hide players the sender cannot see. Red: docs/evidence/duel-block-review-red.log. Green: 142 Java tests on each pinned Paper API (26.3 first, 26.2 last), seven Node tooling tests and EARS. Not verified in game.

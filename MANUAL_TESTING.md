@@ -180,3 +180,5 @@ Use disposable accounts on staging. Temporarily set `settings.duel-cooldown-seco
 5. A runs `/duel unblock B`; challenges and invites work again.
 6. Make `duel-blocks.yml` unreadable (invalid YAML) and restart: new challenges and invites are refused with the "paused" message and a warning is logged; fix the file and restart to recover.
 7. With EnthusiaFriends installed, Block Everywhere on B adds the duel block, and Friends unblock removes it.
+8. A challenges B; B then blocks A before accepting (or A blocks B): `/duel accept` is refused. Invite C to a party, then have a party member block C: C's `/duel party accept` is refused.
+9. With a vanished staff member online, `/duel block <tab>` and `/duel <tab>` do not suggest them.

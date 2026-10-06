@@ -9,7 +9,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-/** Personal duel blocks are saved before they are confirmed; unreadable or unwritable storage refuses new duels. */
+/**
+ * Personal duel blocks are saved before they are confirmed. An unreadable block file refuses new duels until it is
+ * read again (enable on reload); a failed save only fails that change and keeps the previous list in effect.
+ */
 public final class DuelBlockService {
     public enum Change { CHANGED, UNCHANGED, FAILED }
 
@@ -58,7 +61,7 @@ public final class DuelBlockService {
             return Change.CHANGED;
         } catch (IOException ex) {
             blocks.set(owner, target, !blocked);
-            fail(ex);
+            warning.accept("Could not save a duel block change; the previous block list stays in effect: " + ex.getMessage());
             return Change.FAILED;
         }
     }

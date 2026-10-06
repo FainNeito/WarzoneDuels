@@ -235,6 +235,12 @@ public final class DuelService {
         return blockService;
     }
 
+    /** A player may join only if no member of the party and the joining player block each other. */
+    public boolean allowsPartyJoin(DuelParty party, Player joining) {
+        List<UUID> members = party.members().stream().map(DuelParty.DuelPartyMember::playerId).toList();
+        return !rejectDuelBlock(members, List.of(joining.getUniqueId()), joining);
+    }
+
     /** Party invitations are refused when the invitee and any member of the inviting party block each other. */
     public boolean allowsPartyInvite(Player leader, Player invitee) {
         List<UUID> members = partyService.partyOf(leader.getUniqueId())
@@ -314,6 +320,9 @@ public final class DuelService {
 
     public void reloadConfig() {
         plugin.reloadConfig();
+        if (blockService != null && !blockService.isHealthy()) {
+            blockService.enable();
+        }
         FileConfiguration config = plugin.getConfig();
         prefix = color(config.getString("messages.prefix", "&6[Duel]&r "));
         requestExpireSeconds = Math.max(5, config.getInt("settings.request-expire-seconds", 120));
@@ -811,6 +820,11 @@ public final class DuelService {
 
     private boolean rejectAcceptedRequest(Player requester, Player target, DuelSettings settings) {
         if (rejectCooldown(requester, target, List.of(requester, target))) {
+            clearPendingRequest();
+            return true;
+        }
+        // A block added after the request was sent still stops the duel.
+        if (rejectDuelBlock(List.of(requester.getUniqueId()), List.of(target.getUniqueId()), target)) {
             clearPendingRequest();
             return true;
         }
