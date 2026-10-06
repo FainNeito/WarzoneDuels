@@ -1,5 +1,7 @@
 package dev.minecraft.warzoneduels;
 
+import org.bukkit.plugin.ServicePriority;
+
 import dev.minecraft.warzoneduels.adapter.bukkit.command.DuelCommand;
 import dev.minecraft.warzoneduels.adapter.bukkit.command.StatsCommand;
 import dev.minecraft.warzoneduels.adapter.bukkit.gui.DuelGuiListener;
@@ -13,6 +15,10 @@ import dev.minecraft.warzoneduels.adapter.bukkit.persistence.LoadoutArchiveStore
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.PlayerStatsStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.YamlDuelCooldownStore;
 import dev.minecraft.warzoneduels.app.DuelCooldownService;
+import dev.minecraft.warzoneduels.app.DuelBlockApiService;
+import dev.minecraft.warzoneduels.app.DuelBlockService;
+import dev.minecraft.warzoneduels.api.DuelBlockApi;
+import dev.minecraft.warzoneduels.adapter.bukkit.persistence.YamlDuelBlockStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.RuntimeStateStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.SpoilsStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.SpectatorSessionStore;
@@ -113,6 +119,13 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
             new DuelCooldownService(new YamlDuelCooldownStore(getDataFolder().toPath().resolve("duel-cooldowns.yml")),
                 System::currentTimeMillis, message -> getLogger().warning(message))
         );
+        // Personal duel blocks (REQ-041), shared with other plugins through DuelBlockApi.
+        DuelBlockService blockService = new DuelBlockService(
+            new YamlDuelBlockStore(getDataFolder().toPath().resolve("duel-blocks.yml")), message -> getLogger().warning(message));
+        blockService.enable();
+        activeDuelService.setBlockService(blockService);
+        getServer().getServicesManager().register(DuelBlockApi.class, new DuelBlockApiService(blockService, Bukkit::isPrimaryThread),
+            this, ServicePriority.Normal);
         this.combatTagPort = new CombatLogXCombatTagPort(this, activeDuelService);
         activeDuelService.setCombatTagPort(combatTagPort);
         combatTagPort.enable();
@@ -163,6 +176,7 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        getServer().getServicesManager().unregisterAll(this);
         if (activeDuelService != null) {
             activeDuelService.disable(isServerStopping());
         }

@@ -22,6 +22,7 @@ public final class PermissionPolicy {
     public static final String STATS_OTHERS = "warzoneduels.command.stats.others";
     public static final String INFO = "warzoneduels.command.info";
     public static final String PARTY = "warzoneduels.command.party";
+    public static final String BLOCK = "warzoneduels.command.block";
     public static final String ADMIN_RELOAD = "warzoneduels.admin.reload";
     public static final String ADMIN_MODES = "warzoneduels.admin.modes";
     public static final String ADMIN_RESTORE_LOADOUT = "warzoneduels.admin.restoreloadout";
@@ -40,7 +41,7 @@ public final class PermissionPolicy {
     private static final Map<String, String> SUBCOMMAND_PERMISSIONS = buildSubcommandPermissions();
     private static final List<String> ROOT_ORDER = List.of(
         "accept", "deny", "review", "watch", "spectate", "stands", "leave", "unwatch", "draw", "surrender", "cancel",
-        "party", "vault", "stats", "info", "settings", "mode", "mapsave", "mapload", "mapstatus", "reload", "restoreloadout",
+        "party", "block", "unblock", "blocked", "vault", "stats", "info", "settings", "mode", "mapsave", "mapload", "mapstatus", "reload", "restoreloadout",
         "recoverwatcher", "setpos1", "setpos2", "setspawn1", "setspawn2", "setspectator", "setexit"
     );
 
@@ -80,6 +81,9 @@ public final class PermissionPolicy {
         permissions.put("info", INFO);
         permissions.put("settings", INFO);
         permissions.put("party", PARTY);
+        permissions.put("block", BLOCK);
+        permissions.put("unblock", BLOCK);
+        permissions.put("blocked", BLOCK);
         permissions.put("reload", ADMIN_RELOAD);
         permissions.put("mode", ADMIN_MODES);
         permissions.put("restoreloadout", ADMIN_RESTORE_LOADOUT);

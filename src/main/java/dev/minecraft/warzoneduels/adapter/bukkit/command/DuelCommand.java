@@ -2,6 +2,7 @@ package dev.minecraft.warzoneduels.adapter.bukkit.command;
 
 import dev.minecraft.warzoneduels.adapter.bukkit.spoils.SpoilsGuiFactory;
 import dev.minecraft.warzoneduels.adapter.bukkit.gui.DuelGui;
+import dev.minecraft.warzoneduels.app.DuelBlockService;
 import dev.minecraft.warzoneduels.app.DuelService;
 import dev.minecraft.warzoneduels.app.DuelPartyService;
 import dev.minecraft.warzoneduels.app.SpoilsService;
@@ -108,6 +109,8 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
             case STATS_COMMAND -> player.performCommand(args.length >= TWO_ARGUMENTS ? STATS_COMMAND + " " + args[1] : STATS_COMMAND);
             case "info", "settings" -> duelService.showSettings(player);
             case "party" -> handlePartyCommand(player, args);
+            case "block", "unblock" -> changeDuelBlock(player, "block".equals(sub), args);
+            case "blocked" -> listDuelBlocks(player);
             case RELOAD_COMMAND -> handleReload(player);
             case RESTORE_LOADOUT_COMMAND -> handleRestoreLoadout(player, args);
             case MAP_SAVE_COMMAND -> handleMapSave(player, args);
@@ -144,6 +147,17 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
         if (shouldCompleteOnlinePlayers(sender, args)) {
             addOnlinePlayerCompletions(sender, result, args[1].toLowerCase(Locale.ROOT));
             return result;
+        }
+        if (sender instanceof Player player && args.length == TWO_ARGUMENTS && sender.hasPermission(PermissionPolicy.BLOCK)) {
+            String typed = args[1].toLowerCase(Locale.ROOT);
+            if ("block".equalsIgnoreCase(args[0])) {
+                addOnlinePlayerCompletions(sender, result, typed);
+                return result;
+            }
+            if ("unblock".equalsIgnoreCase(args[0])) {
+                blockedNames(player).stream().filter(name -> matchesTyped(name.toLowerCase(Locale.ROOT), typed)).forEach(result::add);
+                return result;
+            }
         }
         if (sender instanceof Player player && args.length >= TWO_ARGUMENTS && "party".equalsIgnoreCase(args[0])) {
             addPartyCompletions(player, result, args);
@@ -278,6 +292,57 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /** /duel block|unblock <player>: personal duel blocks (REQ-041). Players who have joined before can be blocked offline. */
+    private void changeDuelBlock(Player player, boolean block, String[] args) {
+        DuelBlockService blocks = duelService.blockService();
+        if (args.length < TWO_ARGUMENTS) {
+            player.sendMessage(ChatColor.RED + "Usage: /duel " + (block ? "block" : "unblock") + " <player>");
+            return;
+        }
+        if (blocks == null) {
+            player.sendMessage(ChatColor.RED + "Duel blocks are not available.");
+            return;
+        }
+        org.bukkit.OfflinePlayer target = player.getServer().getPlayerExact(args[1]);
+        if (target == null) {
+            target = player.getServer().getOfflinePlayerIfCached(args[1]);
+        }
+        if (target == null) {
+            player.sendMessage(ChatColor.RED + "No player named " + args[1] + " has joined this server.");
+            return;
+        }
+        if (target.getUniqueId().equals(player.getUniqueId())) {
+            player.sendMessage(ChatColor.RED + "You cannot block yourself.");
+            return;
+        }
+        String name = target.getName() == null ? args[1] : target.getName();
+        switch (blocks.set(player.getUniqueId(), target.getUniqueId(), block)) {
+            case CHANGED -> player.sendMessage(ChatColor.GREEN + (block
+                ? "Blocked duel challenges and party invites with " + name + "."
+                : "Unblocked duel challenges and party invites with " + name + "."));
+            case UNCHANGED -> player.sendMessage(ChatColor.YELLOW + name + (block ? " is already blocked." : " is not blocked."));
+            case FAILED -> player.sendMessage(ChatColor.RED + "Duel blocks could not be saved. Please try again later.");
+        }
+    }
+
+    private void listDuelBlocks(Player player) {
+        List<String> names = blockedNames(player);
+        player.sendMessage(names.isEmpty()
+            ? ChatColor.YELLOW + "You have not blocked anyone from duels."
+            : ChatColor.YELLOW + "Duel blocks: " + ChatColor.WHITE + String.join(", ", names));
+    }
+
+    private List<String> blockedNames(Player player) {
+        DuelBlockService blocks = duelService.blockService();
+        if (blocks == null) {
+            return List.of();
+        }
+        return blocks.blockedBy(player.getUniqueId()).stream()
+            .map(id -> Optional.ofNullable(player.getServer().getOfflinePlayer(id).getName()).orElse(id.toString()))
+            .sorted(String.CASE_INSENSITIVE_ORDER)
+            .toList();
+    }
+
     private void createParty(Player player) {
         partyService.createParty(player.getUniqueId(), player.getName());
         player.sendMessage(ChatColor.GREEN + "Created a Duel Party. You are the leader.");
@@ -291,6 +356,9 @@ public final class DuelCommand implements CommandExecutor, TabCompleter {
         Player target = player.getServer().getPlayer(args[2]);
         if (target == null || !target.isOnline()) {
             duelService.sendMessage(player, TARGET_OFFLINE_MESSAGE);
+            return;
+        }
+        if (!duelService.allowsPartyInvite(player, target)) {
             return;
         }
         partyService.invite(player.getUniqueId(), target.getUniqueId(), target.getName(), System.currentTimeMillis());
