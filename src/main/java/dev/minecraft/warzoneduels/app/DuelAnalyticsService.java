@@ -88,6 +88,10 @@ public final class DuelAnalyticsService {
         }
     }
 
+    public List<Map<String, Object>> websiteWeeklyWins(long start, long end) {
+        return store.websiteWeeklyWins(start, end);
+    }
+
     public long countTotalDuels() {
         return store.countAll();
     }
