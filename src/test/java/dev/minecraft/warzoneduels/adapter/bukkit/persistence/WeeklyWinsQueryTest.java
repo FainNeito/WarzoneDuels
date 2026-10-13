@@ -28,4 +28,34 @@ class WeeklyWinsQueryTest {
             assertThrows(IllegalArgumentException.class, () -> WeeklyWinsQuery.topThree(connection, 200, 100));
         }
     }
+    @Test
+    void winningTeamParticipantsReceiveTheirOwnCountWithoutCreditingLosers() throws Exception {
+        try (var connection = DriverManager.getConnection("jdbc:h2:mem:weeklyteam;DB_CLOSE_DELAY=-1")) {
+            try (var statement=connection.createStatement()) {
+                statement.execute("CREATE TABLE duel_records(reference VARCHAR, winner_id VARCHAR, winner_name VARCHAR, ended_at BIGINT, counted_as_match BOOLEAN, end_reason VARCHAR, team_size INT)");
+                statement.execute("CREATE TABLE duel_record_participants(duel_reference VARCHAR,player_id VARCHAR,player_name VARCHAR,winner BOOLEAN)");
+                statement.execute("INSERT INTO duel_records VALUES ('team','winner-a','A',110,TRUE,'KILL',2),('draw','winner-a','A',111,TRUE,'DRAW',2),('cancel','winner-a','A',112,FALSE,'KILL',2)");
+                statement.execute("INSERT INTO duel_record_participants VALUES ('team','winner-a','A',TRUE),('team','winner-b','B',TRUE),('team','loser','Loser',FALSE),('draw','winner-b','B',TRUE),('cancel','winner-b','B',TRUE)");
+            }
+            var rows=WeeklyWinsQuery.topThree(connection,100,200);
+            assertEquals(java.util.List.of("winner-a","winner-b"),rows.stream().map(row->row.get("id")).toList());
+            assertTrue(rows.stream().allMatch(row->row.get("wins").equals(1L)));
+        }
+    }
+    @Test void incompleteTeamCreditsFailClosedAndBoundedResultsDeclareCompleteness() throws Exception {
+        try(var connection=DriverManager.getConnection("jdbc:h2:mem:weeklybounded;DB_CLOSE_DELAY=-1")) {
+            try(var statement=connection.createStatement()) {
+                statement.execute("CREATE TABLE duel_records(reference VARCHAR,winner_id VARCHAR,winner_name VARCHAR,ended_at BIGINT,counted_as_match BOOLEAN,end_reason VARCHAR,team_size INT)");
+                statement.execute("INSERT INTO duel_records VALUES ('team','a','A',110,TRUE,'KILL',2)");
+            }
+            assertThrows(java.sql.SQLException.class,()->WeeklyWinsQuery.snapshot(connection,100,200));
+            try(var statement=connection.createStatement()) {
+                statement.execute("DELETE FROM duel_records");
+                for(int index=0;index<501;index++)statement.execute("INSERT INTO duel_records VALUES ('r"+index+"','id"+index+"','Player',110,TRUE,'KILL',1)");
+            }
+            var limited=WeeklyWinsQuery.snapshot(connection,100,200);
+            assertEquals(false,limited.get("complete"));assertEquals(500,((java.util.List<?>)limited.get("items")).size());
+            assertEquals(true,WeeklyWinsQuery.snapshot(connection,300,400).get("complete"));
+        }
+    }
 }

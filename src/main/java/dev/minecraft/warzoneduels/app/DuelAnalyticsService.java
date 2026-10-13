@@ -92,6 +92,10 @@ public final class DuelAnalyticsService {
         return store.websiteWeeklyWins(start, end);
     }
 
+    public Map<String,Object> websiteWeeklyResults(long start,long end) {
+        return store.websiteWeeklyResults(start,end);
+    }
+
     public long countTotalDuels() {
         return store.countAll();
     }
