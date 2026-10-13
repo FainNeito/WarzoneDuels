@@ -6,6 +6,7 @@ import java.util.*;
 
 /** Public read-only projection; uses persisted winner credits, never opponent data. */
 public final class WeeklyWinsQuery {
+    private static final String RECORDS="duel_records",PARTICIPANTS="duel_record_participants",TEAM_SIZE="team_size";
     private WeeklyWinsQuery() { }
     public static List<Map<String,Object>> topThree(Connection connection,long start,long end) throws SQLException {
         return read(connection,start,end,3);
@@ -24,8 +25,8 @@ public final class WeeklyWinsQuery {
     }
     private static boolean hasTeamSize(Connection connection) throws SQLException {
         try(var columns=connection.getMetaData().getColumns(null,null,null,null)) {
-            while(columns.next())if("duel_records".equalsIgnoreCase(columns.getString("TABLE_NAME"))
-                    &&"team_size".equalsIgnoreCase(columns.getString("COLUMN_NAME")))return true;
+            while(columns.next())if(RECORDS.equalsIgnoreCase(columns.getString("TABLE_NAME"))
+                    &&TEAM_SIZE.equalsIgnoreCase(columns.getString("COLUMN_NAME")))return true;
         }
         return false;
     }
@@ -41,7 +42,7 @@ public final class WeeklyWinsQuery {
     }
     private static List<Map<String,Object>> read(Connection connection,long start,long end,int limit) throws SQLException {
         if(start<0||end<=start||end-start>7L*86400000)throw new IllegalArgumentException("Invalid weekly interval");
-        boolean participants=hasTable(connection,"duel_record_participants");
+        boolean participants=hasTable(connection,PARTICIPANTS);
         requireTeamCredits(connection,start,end,participants);
         String legacy="SELECT r.reference AS duel_reference,r.winner_id AS player_id,r.winner_name AS player_name FROM duel_records r WHERE r.winner_id IS NOT NULL AND r.winner_id<>''";
         String credits=participants?"SELECT DISTINCT p.duel_reference,p.player_id,p.player_name FROM duel_record_participants p WHERE p.winner=TRUE UNION ALL "+legacy+" AND NOT EXISTS(SELECT 1 FROM duel_record_participants p WHERE p.duel_reference=r.reference)":legacy;

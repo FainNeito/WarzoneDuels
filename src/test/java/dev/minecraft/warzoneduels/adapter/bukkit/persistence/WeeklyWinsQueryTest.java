@@ -5,9 +5,13 @@ import java.sql.DriverManager;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WeeklyWinsQueryTest {
+    private static final String WINS="wins";
+    private static java.sql.Connection database(String name) throws java.sql.SQLException {
+        return DriverManager.getConnection("jdbc:h2:mem:"+name);
+    }
     @Test
     void countsOnlyQualifiedWinsAndUsesLatestNameWithinHalfOpenWindow() throws Exception {
-        try (var connection = DriverManager.getConnection("jdbc:h2:mem:weekly;DB_CLOSE_DELAY=-1")) {
+        try (var connection = database("weekly")) {
             try (var statement = connection.createStatement()) {
                 statement.execute("CREATE TABLE duel_records(reference VARCHAR, winner_id VARCHAR, winner_name VARCHAR, ended_at BIGINT, counted_as_match BOOLEAN, end_reason VARCHAR DEFAULT 'KILL')");
                 statement.execute("INSERT INTO duel_records(reference,winner_id,winner_name,ended_at,counted_as_match) VALUES ('a','uuid-a','OldName',100,TRUE),('b','uuid-a','NewName',199,TRUE),"
@@ -20,17 +24,17 @@ class WeeklyWinsQueryTest {
             assertEquals(3, results.size());
             assertEquals("uuid-a", results.get(0).get("id"));
             assertEquals("NewName", results.get(0).get("name"));
-            assertEquals(2L, results.get(0).get("wins"));
+            assertEquals(2L, results.get(0).get(WINS));
             assertEquals("uuid-b", results.get(1).get("id"));
-            assertEquals(1L, results.get(2).get("wins"));
-            assertEquals(java.util.Set.of("id", "name", "wins"), results.get(0).keySet());
+            assertEquals(1L, results.get(2).get(WINS));
+            assertEquals(java.util.Set.of("id", "name", WINS), results.get(0).keySet());
             assertTrue(WeeklyWinsQuery.topThree(connection, 300, 400).isEmpty());
             assertThrows(IllegalArgumentException.class, () -> WeeklyWinsQuery.topThree(connection, 200, 100));
         }
     }
     @Test
     void winningTeamParticipantsReceiveTheirOwnCountWithoutCreditingLosers() throws Exception {
-        try (var connection = DriverManager.getConnection("jdbc:h2:mem:weeklyteam;DB_CLOSE_DELAY=-1")) {
+        try (var connection = database("weeklyteam")) {
             try (var statement=connection.createStatement()) {
                 statement.execute("CREATE TABLE duel_records(reference VARCHAR, winner_id VARCHAR, winner_name VARCHAR, ended_at BIGINT, counted_as_match BOOLEAN, end_reason VARCHAR, team_size INT)");
                 statement.execute("CREATE TABLE duel_record_participants(duel_reference VARCHAR,player_id VARCHAR,player_name VARCHAR,winner BOOLEAN)");
@@ -39,11 +43,11 @@ class WeeklyWinsQueryTest {
             }
             var rows=WeeklyWinsQuery.topThree(connection,100,200);
             assertEquals(java.util.List.of("winner-a","winner-b"),rows.stream().map(row->row.get("id")).toList());
-            assertTrue(rows.stream().allMatch(row->row.get("wins").equals(1L)));
+            assertTrue(rows.stream().allMatch(row->row.get(WINS).equals(1L)));
         }
     }
     @Test void incompleteTeamCreditsFailClosedAndBoundedResultsDeclareCompleteness() throws Exception {
-        try(var connection=DriverManager.getConnection("jdbc:h2:mem:weeklybounded;DB_CLOSE_DELAY=-1")) {
+        try(var connection=database("weeklybounded")) {
             try(var statement=connection.createStatement()) {
                 statement.execute("CREATE TABLE duel_records(reference VARCHAR,winner_id VARCHAR,winner_name VARCHAR,ended_at BIGINT,counted_as_match BOOLEAN,end_reason VARCHAR,team_size INT)");
                 statement.execute("INSERT INTO duel_records VALUES ('team','a','A',110,TRUE,'KILL',2)");
