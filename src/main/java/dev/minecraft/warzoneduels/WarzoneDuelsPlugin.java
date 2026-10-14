@@ -16,8 +16,10 @@ import dev.minecraft.warzoneduels.adapter.bukkit.persistence.PlayerStatsStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.YamlDuelCooldownStore;
 import dev.minecraft.warzoneduels.app.DuelCooldownService;
 import dev.minecraft.warzoneduels.app.DuelBlockApiService;
+import dev.minecraft.warzoneduels.app.DuelStatusApiService;
 import dev.minecraft.warzoneduels.app.DuelBlockService;
 import dev.minecraft.warzoneduels.api.DuelBlockApi;
+import dev.minecraft.warzoneduels.api.DuelStatusApi;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.YamlDuelBlockStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.RuntimeStateStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.SpoilsStore;
@@ -126,6 +128,10 @@ public class WarzoneDuelsPlugin extends JavaPlugin {
         activeDuelService.setBlockService(blockService);
         getServer().getServicesManager().register(DuelBlockApi.class, new DuelBlockApiService(blockService, Bukkit::isPrimaryThread),
             this, ServicePriority.Normal);
+        // Match status for other plugins (REQ-035), for example EnthusiaFriends' Join.
+        DuelService statusSource = activeDuelService;
+        getServer().getServicesManager().register(DuelStatusApi.class,
+            new DuelStatusApiService(statusSource::isInMatch, statusSource::isWatching, Bukkit::isPrimaryThread), this, ServicePriority.Normal);
         this.combatTagPort = new CombatLogXCombatTagPort(this, activeDuelService);
         activeDuelService.setCombatTagPort(combatTagPort);
         combatTagPort.enable();

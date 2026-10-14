@@ -1,5 +1,16 @@
 # WarzoneDuels SPEAR tasks
 
+- [x] **TDD-027** - Tell other plugins whether a player is in a match or watching one.
+  Tag: TDD
+  References: REQ-035; EnthusiaFriends docs/tasks.md (Join must refuse during the countdown before a duel, not only once commands are locked).
+  Acceptance: DuelStatusApi.isInMatch is true for a player in an accepted request or ready party challenge, a queued start, arena preparation, the countdown or the fight, and false before acceptance, after elimination and for watchers; isWatching is true only during an active watch session; both throw off the main thread; the plugin registers the API with Bukkit's ServicesManager.
+  Evidence:
+  - DuelService already tracks each stage: queuedDuelStart (accepted 1v1 waiting to start), preparingDuel (arena being prepared), activeDuel with duelCountdownActive (countdown and fight) and eliminatedParticipantIds; DuelChallengeService.readyChallengeFor finds party challenges every player accepted.
+  - SpectatorManager.isActiveWatcher reports active watch sessions.
+  - EnthusiaFriends' Join asks command blockers through PlayerCommandPreprocessEvent, which only refuses once WarzoneDuels locks commands for participants; there is no way to ask about earlier stages.
+  - DuelBlockApi/DuelBlockApiService show the existing main-thread ServicesManager API pattern.
+  Validation: with a throwing DuelStatusApiService stub and no DuelService methods or registration, all four new tests failed on the missing behavior (docs/evidence/duel-match-status-red.log). DuelStatusApiService, DuelService.isInMatch/isWatching and the ServicesManager registration then made them pass; clean verify passes 146 Java tests on the pinned 26.3 and then 26.2 profiles (duel-match-status-26.3-verify.log, duel-match-status-26.2-verify.log), seven Node tooling tests and EARS. Stage coverage in DuelService is source-contract; MANUAL_TESTING.md lists the live check with EnthusiaFriends.
+
 - [x] **TDD-026** - Close duel block gaps found in code review.
   Tag: TDD
   References: REQ-034 (amended); TDD-025.

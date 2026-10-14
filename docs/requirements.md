@@ -1,5 +1,15 @@
 # WarzoneDuels requirements
 
+### REQ-035 - Match status for other plugins
+
+THE SYSTEM SHALL register a main-thread DuelStatusApi with Bukkit's ServicesManager that tells other plugins, without permission checks or player messages, whether a player is in a match and whether a player is watching one.
+
+THE SYSTEM SHALL count a player as in a match from the moment their one-versus-one request or party challenge is accepted by every player it needs, through a queued start, arena preparation and the start countdown, until the duel ends or that player is eliminated.
+
+THE SYSTEM SHALL NOT count a challenge that has been sent but not yet accepted, a player who has been eliminated, or a watcher as in a match, and SHALL report a player who is watching a duel as watching only while their watch session is active.
+
+IF DuelStatusApi is called off the main thread THEN THE SYSTEM SHALL throw IllegalStateException rather than read match state concurrently.
+
 ### REQ-034 - Personal duel blocks
 
 WHEN a player runs /duel block, /duel unblock or /duel blocked with warzoneduels.command.block THE SYSTEM SHALL add, remove or list that player's blocked UUIDs, refuse self-blocks, and persist each change in duel-blocks.yml through a same-directory temporary file before confirming it.
