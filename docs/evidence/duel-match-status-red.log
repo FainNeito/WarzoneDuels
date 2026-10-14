@@ -1,0 +1,65 @@
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.google.inject.internal.aop.HiddenClassDefiner (file:/opt/maven/lib/guice-5.1.0-classes.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.inject.internal.aop.HiddenClassDefiner
+WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 0.141 s <<< FAILURE! -- in dev.minecraft.warzoneduels.app.DuelStatusApiServiceTest
+[ERROR] dev.minecraft.warzoneduels.app.DuelStatusApiServiceTest.refusesCallsOffTheMainThread -- Time elapsed: 0.065 s <<< ERROR!
+java.lang.UnsupportedOperationException: TDD-027 not implemented
+	at dev.minecraft.warzoneduels.app.DuelStatusApiService.<init>(DuelStatusApiService.java:11)
+	at dev.minecraft.warzoneduels.app.DuelStatusApiServiceTest.refusesCallsOffTheMainThread(DuelStatusApiServiceTest.java:25)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+[ERROR] dev.minecraft.warzoneduels.app.DuelStatusApiServiceTest.reportsMatchAndWatchStateOnTheMainThread -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.UnsupportedOperationException: TDD-027 not implemented
+	at dev.minecraft.warzoneduels.app.DuelStatusApiService.<init>(DuelStatusApiService.java:11)
+	at dev.minecraft.warzoneduels.app.DuelStatusApiServiceTest.reportsMatchAndWatchStateOnTheMainThread(DuelStatusApiServiceTest.java:14)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+[ERROR] Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.013 s <<< FAILURE! -- in dev.minecraft.warzoneduels.app.DuelStatusWiringTest
+[ERROR] dev.minecraft.warzoneduels.app.DuelStatusWiringTest.matchStatusCoversEveryStageFromAcceptanceToElimination -- Time elapsed: 0.008 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: public boolean isInMatch( is missing ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at dev.minecraft.warzoneduels.app.DuelStatusWiringTest.body(DuelStatusWiringTest.java:12)
+	at dev.minecraft.warzoneduels.app.DuelStatusWiringTest.matchStatusCoversEveryStageFromAcceptanceToElimination(DuelStatusWiringTest.java:19)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+[ERROR] dev.minecraft.warzoneduels.app.DuelStatusWiringTest.pluginRegistersTheStatusApiOnTheMainThread -- Time elapsed: 0.002 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: DuelStatusApi is registered ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at dev.minecraft.warzoneduels.app.DuelStatusWiringTest.pluginRegistersTheStatusApiOnTheMainThread(DuelStatusWiringTest.java:29)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+[ERROR] Failures: 
+[ERROR]   DuelStatusWiringTest.matchStatusCoversEveryStageFromAcceptanceToElimination:19->body:12 public boolean isInMatch( is missing ==> expected: <true> but was: <false>
+[ERROR]   DuelStatusWiringTest.pluginRegistersTheStatusApiOnTheMainThread:29 DuelStatusApi is registered ==> expected: <true> but was: <false>
+[ERROR] Errors: 
+[ERROR]   DuelStatusApiServiceTest.refusesCallsOffTheMainThread:25 ? UnsupportedOperation TDD-027 not implemented
+[ERROR]   DuelStatusApiServiceTest.reportsMatchAndWatchStateOnTheMainThread:14 ? UnsupportedOperation TDD-027 not implemented
+[ERROR] Tests run: 4, Failures: 2, Errors: 2, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.2:test (default-test) on project WarzoneDuels: There are test failures.
+[ERROR] 
+[ERROR] See /home/user/WarzoneDuels/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

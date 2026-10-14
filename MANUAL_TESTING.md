@@ -182,3 +182,12 @@ Use disposable accounts on staging. Temporarily set `settings.duel-cooldown-seco
 7. With EnthusiaFriends installed, Block Everywhere on B adds the duel block, and Friends unblock removes it.
 8. A challenges B; B then blocks A before accepting (or A blocks B): `/duel accept` is refused. Invite C to a party, then have a party member block C: C's `/duel party accept` is refused.
 9. With a vanished staff member online, `/duel block <tab>` and `/duel <tab>` do not suggest them.
+
+## Match status for other plugins (REQ-035)
+
+With EnthusiaFriends on the same server and two friends online:
+
+1. Challenge a player and, before they accept, use Join on a friend from `/friends`: the countdown starts (an unaccepted challenge is not a match). Cancel it.
+2. Accept the challenge. During the start countdown, and again during the fight, use Join: Friends refuses with "You can't join a friend during a duel."
+3. Get eliminated in a party match and, while your team keeps fighting, use Join: it is allowed once you are back at spawn.
+4. Watch a duel with `/duel watch` and use Join: Friends refuses until you leave watch mode.

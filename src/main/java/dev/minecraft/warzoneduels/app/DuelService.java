@@ -408,6 +408,25 @@ public final class DuelService {
             && !eliminatedParticipantIds.contains(playerId);
     }
 
+    /**
+     * Whether the player is in a match for other plugins (REQ-035): accepted by everyone it needs, queued, preparing,
+     * counting down or fighting, and not eliminated. A sent but unaccepted request is not a match.
+     */
+    public boolean isInMatch(UUID playerId) {
+        if (playerId == null) {
+            return false;
+        }
+        return isInActiveDuel(playerId)
+            || preparingDuel != null && preparingDuel.contains(playerId)
+            || queuedDuelStart != null && queuedDuelStart.involves(playerId)
+            || challengeService.readyChallengeFor(playerId, System.currentTimeMillis()).isPresent();
+    }
+
+    /** Whether the player is watching a duel (an active watch session), for other plugins (REQ-035). */
+    public boolean isWatching(UUID playerId) {
+        return spectatorManager.isActiveWatcher(playerId);
+    }
+
     public boolean shouldCancelVictoryMomentDamage(Player player) {
         return player != null
             && duelEnding
