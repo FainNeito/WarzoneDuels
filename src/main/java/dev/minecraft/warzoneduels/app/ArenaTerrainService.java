@@ -337,19 +337,33 @@ public final class ArenaTerrainService {
     }
 
     public void loadSnapshot(String mapId, Runnable success, Consumer<String> failure) {
+        loadSnapshot(mapId, List.of(), success, failure);
+    }
+
+    public void loadSnapshot(String mapId, List<List<FootprintBlock>> startingSlots,
+                             Runnable success, Consumer<String> failure) {
         if (!beginOperation(OPERATION_RESTORE, mapId, failure)) {
             return;
         }
+        Consumer<ArenaMapSnapshot> restore = snapshot -> {
+            if (!validateSnapshot(snapshot, failure)) return;
+            ArenaMapSnapshot forMatch;
+            try {
+                forMatch = snapshot.withTeamPlates(arenaFootprint.orderedBlocks(), startingSlots);
+            } catch (IllegalArgumentException ex) {
+                failActiveOperation("Cannot prepare " + mapId + ": " + ex.getMessage(), failure);
+                return;
+            }
+            cacheSnapshot(snapshot);
+            applySnapshot(forMatch, success, failure);
+        };
         ArenaMapSnapshot cachedSnapshot = cachedSnapshot(mapId);
         if (cachedSnapshot != null) {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (disabled || !isCurrentOperation(OPERATION_RESTORE, mapId)) {
                     return;
                 }
-                if (!validateSnapshot(cachedSnapshot, failure)) {
-                    return;
-                }
-                applySnapshot(cachedSnapshot, success, failure);
+                restore.accept(cachedSnapshot);
             });
             return;
         }
@@ -366,11 +380,7 @@ public final class ArenaTerrainService {
                 failActiveOperation("Failed to load terrain snapshot '" + mapId + "': " + rootMessage(throwable), failure);
                 return;
             }
-            if (!validateSnapshot(snapshot, failure)) {
-                return;
-            }
-            cacheSnapshot(snapshot);
-            applySnapshot(snapshot, success, failure);
+            restore.accept(snapshot);
         }));
     }
 

@@ -171,3 +171,11 @@ IF cooldown history cannot be read or written safely THEN THE SYSTEM SHALL refus
 WHEN a valid challenge is sent THE SYSTEM SHALL credit challenge-sent advancement evidence at most once per unordered cross-team UUID pair within the configured repeat-opponent window, including challenges that expire or are declined.
 
 THE SYSTEM SHALL preserve existing statistics and earned advancements, exclude cancelled requests and interrupted server-shutdown matches from completed-duel cooldowns, and prevent relogging, party recreation, leader changes, or swapped challenger roles from clearing recent history.
+
+### REQ-036 - Individual team starting plates
+
+WHEN a 2v2 or 3v3 map loads THE SYSTEM SHALL give each occupied roster slot its own starting plate matching the original 1v1 spawn on that side before teleporting the players.
+
+THE SYSTEM SHALL preserve the saved map and the original 1v1 layout.
+
+IF occupied team starting plates overlap or fall outside the usable map THEN THE SYSTEM SHALL cancel preparation before teleporting combatants and identify the invalid layout.

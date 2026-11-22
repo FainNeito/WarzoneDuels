@@ -347,3 +347,10 @@ The repository began SPEAR adoption with 14 passing tests. Initial team, party, 
   - Existing pom.xml pins stable 26.2.build.123-stable and compatibility profile paper-26.3 at 26.3.build.8-alpha.
   - Existing immutable GitHub Actions checkout, setup-java and artifact actions in .github/workflows/verify.yml; no gameplay sources or server configuration changes.
   Validation: round2-warzone-tooling.log passed six Node tests and EARS passed. round2-warzone-26.3-verify.log and round2-warzone-26.2-verify.log each passed 76 Java tests with zero failures/errors/skips. The pinned 26.3 compatibility run ran first; stable 26.2 clean verification ran last, producing the final 1.0.3 artifact. Hosted CI now preserves both report sets separately. No gameplay or deployment changes.
+
+- [x] **TDD-028** - Prepare individual team starting plates before arena entry.
+  Tag: TDD
+  References: REQ-036; docs/implementation.md#team-starting-plates
+  Acceptance: 1v1 keeps both original plates; 2v2 stages four and 3v3 stages six distinct positions; each side retains its own block data; the saved snapshot survives reuse; invalid occupied positions fail before entry.
+  Evidence: ArenaDefinition.teamSpawn assigns configured positions by roster slot; ArenaTerrainService applies selected snapshot entries by footprint index before DuelService teleports participants.
+  Validation: The baseline left sand/air at teammate slots and accepted overlapping slots (two failing assertions). Both TeamStartPlatesTest cases now pass. On disposable Paper 26.2, a two-sided fixture with a pressure plate and carpet produced four plates for 2v2, six for 3v3, then the original two for 1v1. Live multiplayer acceptance remains pending.

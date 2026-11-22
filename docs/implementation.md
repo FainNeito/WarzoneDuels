@@ -60,3 +60,7 @@ Java 25 is the compile and runtime baseline for Minecraft/Paper 26.1 and newer. 
 ## SPEAR adoption
 
 WarzoneDuels existed before adoption. The original 14 tests and the first 12 team-domain tests are baseline evidence, not retrospectively labeled red/green work. New tasks use the project-local skills and Windows-compatible state helper under `tools/spear`.
+
+## Team starting plates
+
+For team matches, derive the plate at each additional occupied spawn from its own side of the selected terrain snapshot. Copy the floor tile and surface at the feet, including block-state data. Use the derived entries only for this restore so ordinary map resets and subsequent 1v1 matches use the saved original.

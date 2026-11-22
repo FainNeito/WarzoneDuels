@@ -191,3 +191,7 @@ With EnthusiaFriends on the same server and two friends online:
 2. Accept the challenge. During the start countdown, and again during the fight, use Join: Friends refuses with "You can't join a friend during a duel."
 3. Get eliminated in a party match and, while your team keeps fighting, use Join: it is allowed once you are back at spawn.
 4. Watch a duel with `/duel watch` and use Join: Friends refuses until you leave watch mode.
+
+## Team starting plates
+
+On a saved map with different starting tiles for the two sides, run 2v2, 3v3, then 1v1. Before the first countdown number, verify each participant is centered on a separate plate matching their own side, including the surface block. Verify the third position is unchanged in 2v2 and that both extra positions on each side return to the saved map in 1v1. Repeat on a map with a different tile design.
