@@ -347,3 +347,11 @@ The repository began SPEAR adoption with 14 passing tests. Initial team, party, 
   - Existing pom.xml pins stable 26.2.build.123-stable and compatibility profile paper-26.3 at 26.3.build.8-alpha.
   - Existing immutable GitHub Actions checkout, setup-java and artifact actions in .github/workflows/verify.yml; no gameplay sources or server configuration changes.
   Validation: round2-warzone-tooling.log passed six Node tests and EARS passed. round2-warzone-26.3-verify.log and round2-warzone-26.2-verify.log each passed 76 Java tests with zero failures/errors/skips. The pinned 26.3 compatibility run ran first; stable 26.2 clean verification ran last, producing the final 1.0.3 artifact. Hosted CI now preserves both report sets separately. No gameplay or deployment changes.
+
+- [x] **TDD-029** - Animate countdown, combat release and final team outcomes.
+  Tag: TDD
+  References: REQ-037; docs/implementation.md#duel-title-animations
+  Evidence: DuelService owns the countdown, respawn and final winner callbacks. The 26.2 server manifest specifies resource pack format 88.0. The existing server pack has a Nexo pack/assets directory.
+  Verification: Missing pack failed the initial test. All 64 glyphs and 150 Maven tests passed. Disposable Paper 26.2 with simulated recipients verified ordered frames for all four cue families, cancellation, fallback and deferred defeat. Visual client acceptance remains pending.
+
+- [x] **TDD-030** - Adopt the ZoneTitles artwork and play the defeat cue (REQ-037). Evidence in docs/verification.md and qa/hud/HudProbe.java.

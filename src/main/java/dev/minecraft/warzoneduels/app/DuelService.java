@@ -6,6 +6,7 @@ import dev.minecraft.warzoneduels.adapter.bukkit.gui.DuelGui;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.LoadoutArchiveStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.RuntimeStateStore;
 import dev.minecraft.warzoneduels.adapter.bukkit.persistence.SpectatorSessionStore;
+import dev.minecraft.warzoneduels.adapter.bukkit.hud.DuelHud;
 import dev.minecraft.warzoneduels.adapter.bukkit.reset.ArenaResetService;
 import dev.minecraft.warzoneduels.domain.ActiveDuel;
 import dev.minecraft.warzoneduels.domain.ArenaDefinition;
@@ -145,6 +146,7 @@ public final class DuelService {
     private boolean clearPlacedBlocksWhenNoBreak;
     private int startCountdownSeconds;
     private int duelTimeLimitSeconds;
+    private final DuelHud hud;
     private int victoryMomentSeconds;
     private boolean victoryFireworks;
     private String matchmakingWorld;
@@ -189,6 +191,7 @@ public final class DuelService {
         DuelCooldownService cooldownService
     ) {
         this.plugin = plugin;
+        this.hud = new DuelHud(plugin);
         this.economyPort = economyPort;
         this.spawnPort = spawnPort;
         this.runtimeStateStore = runtimeStateStore;
@@ -266,6 +269,7 @@ public final class DuelService {
     }
 
     public void disable(boolean serverStopping) {
+        hud.close();
         spectatorManager.disable(serverStopping ? "server-shutdown" : "plugin-disable");
         cancelRequestExpiryTask();
         cancelDisconnectMonitorTask();
@@ -1120,6 +1124,7 @@ public final class DuelService {
     }
 
     public void handleQuit(Player player) {
+        hud.stop(player.getUniqueId());
         requirePrimaryThread();
         if (spectatorManager.isActiveWatcher(player.getUniqueId()) || spectatorManager.hasRecoverableSession(player.getUniqueId())) {
             spectatorManager.restore(player, "player-quit", false);
@@ -1235,6 +1240,7 @@ public final class DuelService {
     }
 
     public void handleRespawn(PlayerRespawnEvent event) {
+        hud.respawn(event.getPlayer());
         requirePrimaryThread();
         UUID playerId = event.getPlayer().getUniqueId();
         if (spectatorManager.hasRecoverableSession(playerId)) {
@@ -2254,6 +2260,14 @@ public final class DuelService {
             }
         }
 
+        MatchTeam resultTeam = winnerId == null ? null : finishedDuel.teamOf(winnerId);
+        for (MatchParticipant participant : finishedDuel.participants()) {
+            hud.stop(participant.playerId());
+            Player recipient = Bukkit.getPlayer(participant.playerId());
+            if (resultTeam != null && recipient != null) {
+                hud.result(recipient, resultTeam.contains(participant.playerId()), finishedDuel.teamOne().size() > 1);
+            }
+        }
         duelAnalyticsService.recordDuel(finishedDuel, winnerId, reason);
         boolean normalResult = reason == DuelEndReason.KILL || reason == DuelEndReason.DRAW
             || reason == DuelEndReason.DISCONNECT_TIMEOUT;
@@ -3156,11 +3170,14 @@ public final class DuelService {
         cancelCountdownTask();
         if (startCountdownSeconds <= 0) {
             duelCountdownActive = false;
+            participants.forEach(hud::fight);
             startDuelTimeLimit();
             return;
         }
         duelCountdownActive = true;
         participants.forEach(this::applyCountdownLock);
+        int size = activeDuel.teamOne().size();
+        String matchLabel = size + "v" + size + " · " + activeDuel.settings().getMapDisplayName();
         final int[] secondsLeft = {startCountdownSeconds};
         countdownTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (activeDuel == null) {
@@ -3172,7 +3189,7 @@ public final class DuelService {
                 for (Player participant : participants) {
                     clearCountdownLock(participant);
                     playCountdownSound(participant, true);
-                    showCountdownTitle(participant, "&aFight!", "&7You are released.");
+                    hud.fight(participant);
                 }
                 sendToParticipants("messages.duel-released");
                 startDuelTimeLimit();
@@ -3181,7 +3198,7 @@ public final class DuelService {
             }
             for (Player participant : participants) {
                 playCountdownSound(participant, false);
-                showCountdownTitle(participant, "&6" + secondsLeft[0], "&7Prepare to fight");
+                hud.countdown(participant, secondsLeft[0], matchLabel);
             }
             sendToParticipants("messages.duel-countdown", "{seconds}", String.valueOf(secondsLeft[0]));
             secondsLeft[0]--;
@@ -3240,10 +3257,6 @@ public final class DuelService {
     private void clearCountdownLock(Player player) {
         player.removePotionEffect(PotionEffectType.SLOWNESS);
         player.removePotionEffect(PotionEffectType.JUMP_BOOST);
-    }
-
-    private void showCountdownTitle(Player player, String title, String subtitle) {
-        player.sendTitle(color(title), color(subtitle), 0, 15, 5);
     }
 
     private void playCountdownSound(Player player, boolean release) {

@@ -60,3 +60,9 @@ Java 25 is the compile and runtime baseline for Minecraft/Paper 26.1 and newer. 
 ## SPEAR adoption
 
 WarzoneDuels existed before adoption. The original 14 tests and the first 12 team-domain tests are baseline evidence, not retrospectively labeled red/green work. New tasks use the project-local skills and Windows-compatible state helper under `tools/spear`.
+
+## Duel title animations
+
+Drive bitmap font frames from the existing duel lifecycle. Use native titles when the pack integration is off or the player has not loaded a server pack. A new cue replaces the previous animation for that player. Keep presentation independent of match resolution and arena reset.
+
+Use the approved ZoneTitles name and tag glyphs with EnthusiaPack combat, skull and trophy icons. Play defeat audio when the recipient receives their result. Track the second bass note independently of bitmap animation so native titles and deferred results use the same timing.

@@ -1,0 +1,13 @@
+{
+  "pack": {
+    "description": "WarzoneDuels animated arena titles",
+    "min_format": [
+      88,
+      0
+    ],
+    "max_format": [
+      88,
+      0
+    ]
+  }
+}

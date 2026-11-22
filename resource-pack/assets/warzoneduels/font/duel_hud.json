@@ -1,0 +1,76 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "warzoneduels:font/countdown_1.png",
+      "height": 16,
+      "ascent": 14,
+      "chars": [
+        ""
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "warzoneduels:font/countdown_2.png",
+      "height": 16,
+      "ascent": 14,
+      "chars": [
+        ""
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "warzoneduels:font/countdown_3.png",
+      "height": 16,
+      "ascent": 14,
+      "chars": [
+        ""
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "warzoneduels:font/countdown_4.png",
+      "height": 16,
+      "ascent": 14,
+      "chars": [
+        ""
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "warzoneduels:font/countdown_5.png",
+      "height": 16,
+      "ascent": 14,
+      "chars": [
+        ""
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "warzoneduels:font/fight.png",
+      "height": 16,
+      "ascent": 14,
+      "chars": [
+        ""
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "warzoneduels:font/defeat.png",
+      "height": 16,
+      "ascent": 14,
+      "chars": [
+        ""
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "warzoneduels:font/victory.png",
+      "height": 16,
+      "ascent": 14,
+      "chars": [
+        ""
+      ]
+    }
+  ]
+}

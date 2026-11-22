@@ -1,0 +1,5 @@
+name: HudProbe
+version: 1
+main: HudProbe
+api-version: "26.2"
+depend: [WarzoneDuels]
