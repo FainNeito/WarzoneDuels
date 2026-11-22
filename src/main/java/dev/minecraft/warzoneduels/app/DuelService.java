@@ -32,6 +32,7 @@ import dev.minecraft.warzoneduels.domain.TeleportAllowanceReason;
 import dev.minecraft.warzoneduels.domain.TypedTeleportAllowance;
 import dev.minecraft.warzoneduels.domain.stats.PlayerDuelStats;
 import dev.minecraft.warzoneduels.domain.terrain.ArenaMapOperationStatus;
+import dev.minecraft.warzoneduels.domain.terrain.FootprintBlock;
 import dev.minecraft.warzoneduels.port.EconomyPort;
 import dev.minecraft.warzoneduels.port.SpawnPort;
 import dev.minecraft.warzoneduels.port.CombatTagPort;
@@ -62,6 +63,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -2156,6 +2158,13 @@ public final class DuelService {
             sendRaw(participants, prefix + ChatColor.RED + ex.getMessage());
             return false;
         }
+        List<List<FootprintBlock>> startingSlots;
+        try {
+            startingSlots = startingPlateSlots(firstTeam.size());
+        } catch (IllegalArgumentException ex) {
+            sendRaw(participants, prefix + ChatColor.RED + ex.getMessage());
+            return false;
+        }
         for (Player participant : participants) {
             loadoutArchiveStore.saveLatestPreDuel(participant, loadoutArchiveStore.capture(participant));
         }
@@ -2168,7 +2177,7 @@ public final class DuelService {
 
         preparingDuel = stagedDuel;
         sendRaw(participants, ChatColor.YELLOW + "Preparing arena terrain...");
-        arenaTerrainService.loadSnapshot(selectedMap.id(), () -> {
+        arenaTerrainService.loadSnapshot(selectedMap.id(), startingSlots, () -> {
             if (preparingDuel != stagedDuel) {
                 refundWagerIfHeld(stagedDuel);
                 return;
@@ -2210,6 +2219,26 @@ public final class DuelService {
             arenaTerrainService.ensureDefaultSnapshotLoaded(logMessage -> plugin.getLogger().warning(logMessage));
         });
         return true;
+    }
+
+    private List<List<FootprintBlock>> startingPlateSlots(int teamSize) {
+        if (teamSize == 1) {
+            return List.of();
+        }
+        List<List<FootprintBlock>> teams = new ArrayList<>(2);
+        for (int side = 0; side < 2; side++) {
+            List<FootprintBlock> slots = new ArrayList<>(teamSize);
+            for (int slot = 0; slot < teamSize; slot++) {
+                Location spawn = arena.teamSpawn(side, slot);
+                if (!arena.contains(spawn) || !arena.contains(spawn.clone().subtract(0, 1, 0))) {
+                    throw new IllegalArgumentException("Starting plate outside arena for team " + (side + 1)
+                        + ", slot " + (slot + 1) + ".");
+                }
+                slots.add(new FootprintBlock(spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ()));
+            }
+            teams.add(slots);
+        }
+        return teams;
     }
 
     private void concludeDuel(Player winner, DuelEndReason reason, boolean broadcastOutcome) {
