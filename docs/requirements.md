@@ -179,3 +179,5 @@ WHEN the opening countdown ticks or combat opens THE SYSTEM SHALL present the cu
 WHEN a duel has a winning team THE SYSTEM SHALL present victory to connected winners and defeat to connected opponents, deferring the result for a dead player until respawn.
 
 THE SYSTEM SHALL offer a namespaced bitmap animation pack and readable native titles for clients without the configured server pack.
+
+WHEN a losing participant receives their defeat title THE SYSTEM SHALL play two descending bass notes five ticks apart, including after respawn and with the native title fallback.

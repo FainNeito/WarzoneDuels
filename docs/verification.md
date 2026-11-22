@@ -49,3 +49,5 @@ Requested by the server owner so EnthusiaFriends' Block Everywhere can cover due
 ## Duel block review fixes (REQ-034 amended, TDD-026, 2026-10-06)
 
 A code review of the merged duel blocks found four gaps, now fixed: a single failed save no longer pauses all duels (that change fails and the previous list stays in effect), /duel reload retries an unreadable block file, accepting a pending 1v1 request or a Duel Party invitation re-checks blocks, and duel name suggestions hide players the sender cannot see. Red: docs/evidence/duel-block-review-red.log. Green: 142 Java tests on each pinned Paper API (26.3 first, 26.2 last), seven Node tooling tests and EARS. Not verified in game.
+
+TDD-030 (REQ-037): On a disposable loopback Paper 26.2 server, HudProbe first failed with an empty defeat-note list. After implementation it verified pitches 0.78 and 0.58 five ticks apart for deferred team defeat and native solo defeat, silence for winners, and cancellation of the second note on HUD stop. Stable Maven clean verify passed 150 tests. All eight atlases matched the approved preview pixel for pixel. Visual and listening acceptance on a Minecraft client is pending.

@@ -9,6 +9,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,6 +21,7 @@ public final class DuelHud {
     private static final int FRAME_COUNT = 8;
     private final JavaPlugin plugin;
     private final Map<UUID, BukkitTask> playing = new HashMap<>();
+    private final Map<UUID, BukkitTask> pendingBassNotes = new HashMap<>();
     private record Result(boolean won, boolean team) {}
     private final Map<UUID, Result> respawnResults = new HashMap<>();
 
@@ -42,10 +44,23 @@ public final class DuelHud {
             respawnResults.put(player.getUniqueId(), new Result(won, team));
             return;
         }
+        if (!player.isOnline()) return;
         show(player, won ? 7 : 6, won ? "VICTORY" : "DEFEAT",
             team ? (won ? "Your team won the duel" : "Your team was defeated") :
                 (won ? "You won the duel" : "You were defeated"),
             won ? NamedTextColor.GOLD : NamedTextColor.RED, 24, 7);
+        if (!won) playDefeatSound(player);
+    }
+
+    private void playDefeatSound(Player player) {
+        UUID id = player.getUniqueId();
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.68f, 0.78f);
+        pendingBassNotes.put(id, Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            pendingBassNotes.remove(id);
+            if (player.isOnline() && !player.isDead()) {
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.60f, 0.58f);
+            }
+        }, 5L));
     }
 
     public void respawn(Player player) {
@@ -60,6 +75,8 @@ public final class DuelHud {
     }
 
     public void stop(UUID id) {
+        var note = pendingBassNotes.remove(id);
+        if (note != null) note.cancel();
         var task = playing.remove(id);
         if (task != null) task.cancel();
         respawnResults.remove(id);
@@ -68,6 +85,8 @@ public final class DuelHud {
     public void close() {
         playing.values().forEach(BukkitTask::cancel);
         playing.clear();
+        pendingBassNotes.values().forEach(BukkitTask::cancel);
+        pendingBassNotes.clear();
         respawnResults.clear();
     }
 

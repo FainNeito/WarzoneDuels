@@ -353,3 +353,5 @@ The repository began SPEAR adoption with 14 passing tests. Initial team, party, 
   References: REQ-037; docs/implementation.md#duel-title-animations
   Evidence: DuelService owns the countdown, respawn and final winner callbacks. The 26.2 server manifest specifies resource pack format 88.0. The existing server pack has a Nexo pack/assets directory.
   Verification: Missing pack failed the initial test. All 64 glyphs and 150 Maven tests passed. Disposable Paper 26.2 with simulated recipients verified ordered frames for all four cue families, cancellation, fallback and deferred defeat. Visual client acceptance remains pending.
+
+- [x] **TDD-030** - Adopt the ZoneTitles artwork and play the defeat cue (REQ-037). Evidence in docs/verification.md and qa/hud/HudProbe.java.
