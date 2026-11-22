@@ -122,6 +122,8 @@ settings:
 
   # Seconds players are frozen after teleport before the fight starts.
   start-countdown-seconds: 5
+  # Enable after adding the duel_hud font to the server-delivered resource pack.
+  animated-hud-pack: false
   # 0 keeps death duels unlimited. Positive values end unfinished duels as a draw after combat is released.
   duel-time-limit-seconds: 0
 

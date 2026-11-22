@@ -171,3 +171,11 @@ IF cooldown history cannot be read or written safely THEN THE SYSTEM SHALL refus
 WHEN a valid challenge is sent THE SYSTEM SHALL credit challenge-sent advancement evidence at most once per unordered cross-team UUID pair within the configured repeat-opponent window, including challenges that expire or are declined.
 
 THE SYSTEM SHALL preserve existing statistics and earned advancements, exclude cancelled requests and interrupted server-shutdown matches from completed-duel cooldowns, and prevent relogging, party recreation, leader changes, or swapped challenger roles from clearing recent history.
+
+### REQ-037 - Animated duel titles
+
+WHEN the opening countdown ticks or combat opens THE SYSTEM SHALL present the current cue without changing movement locks or fight timing.
+
+WHEN a duel has a winning team THE SYSTEM SHALL present victory to connected winners and defeat to connected opponents, deferring the result for a dead player until respawn.
+
+THE SYSTEM SHALL offer a namespaced bitmap animation pack and readable native titles for clients without the configured server pack.
